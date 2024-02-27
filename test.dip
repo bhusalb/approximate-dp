@@ -1,0 +1,12 @@
+NUMERIC Q1 = 5;
+RANDOM RT = gauss(eps/4, Q1);
+RANDOM R1 = gauss(eps/4, Q1);
+IF RT > R1 THEN {
+    NUMERIC O2 = 10;
+    NUMERIC O4 = 20;
+} ELSE {
+    NUMERIC O3 = 10;
+    NUMERIC O3 = 10;
+    NUMERIC O3 = 10;
+    NUMERIC O3 = 10;
+}
