@@ -26,8 +26,6 @@ def p_program(p):
         p[0] = [p[1]]
 
 
-
-
 # This catch-all rule is used for any catastrophic errors.  In this case,
 # we simply return nothing
 
@@ -37,6 +35,9 @@ def p_statement(p):
                   | numeric_var_assignment SEMI
                   | ifblock
                   | ifelseblock
+                  | inputassignment SEMI
+                  | outputassignment SEMI
+                  | setoutput SEMI
     '''
     # print(p[1])
     p[0] = p[1]
@@ -47,33 +48,58 @@ def p_statement_newline(p):
     p[0] = p[1]
 
 
+def p_statement_newline_2(p):
+    '''statement : NEWLINE statement'''
+    p[0] = p[2]
+
+
+def p_input(p):
+    '''inputassignment : INPUT EQUALS LBRACKET numlist RBRACKET COMMA LBRACKET numlist RBRACKET'''
+    p[0] = 'INPUT', p[4], p[8]
+
+
+def p_output(p):
+    '''outputassignment : OUTPUT EQUALS LBRACKET numlist RBRACKET'''
+    p[0] = 'OUTPUT', p[4]
+
 
 def p_statement_random_variable(p):
     '''random_var_assignment : RANDOM variable EQUALS gaussfunc'''
 
-    p[0] = ('GAUSS', p[2], p[4])
+    p[0] = ('assignment', 'GAUSS', p[2], p[4])
 
 
 def p_statement_numeric_variable(p):
     """numeric_var_assignment : NUMERIC variable EQUALS number"""
-    p[0] = ('NUMERIC', p[2], p[4])
+    p[0] = ('assignment', 'NUMERIC', p[2], p[4])
 
 
 def p_gauss(p):
     """gaussfunc : GAUSS LPAREN EPS DIVIDE number COMMA variable RPAREN
                 | GAUSS LPAREN EPS DIVIDE number COMMA number RPAREN
+                | GAUSS LPAREN EPS DIVIDE number COMMA inputindex RPAREN
     """
     p[0] = p[5], p[7]
 
 
+def p_get_input_index(p):
+    '''inputindex : INPUT LBRACKET INTEGER RBRACKET'''
+    p[0] = 'INDEX', int(p[3])
+
+
+def p_set_output(p):
+    '''setoutput : OUTPUT LBRACKET INTEGER RBRACKET EQUALS number'''
+    p[0] = 'SET', 'OUTPUT', int(p[3]), p[6]
+
+
 def p_command_if(p):
-    '''ifblock : IF boolean THEN LCURLY NEWLINE program NEWLINE RCURLY'''
+    '''ifblock : IF boolean THEN LCURLY program  RCURLY'''
     p[0] = ('IF', p[2], p[5])
 
 
 def p_command_if_else(p):
-    '''ifelseblock : IF boolean THEN LCURLY NEWLINE program  RCURLY  ELSE  LCURLY NEWLINE program  RCURLY'''
-    p[0] = ('IFELSE', p[2], p[6], p[11])
+    '''ifelseblock : IF boolean THEN LCURLY  program  RCURLY  ELSE  LCURLY  program  RCURLY'''
+    p[0] = ('IFELSE', p[2], p[5], p[9])
 
 
 # FOR statement
@@ -117,17 +143,18 @@ def p_variable(p):
 
 # # Builds a list of numbers as a Python list
 #
-# def p_numlist(p):
-#     '''numlist : numlist COMMA number
-#                | number'''
-#
-#     if len(p) > 2:
-#         p[0] = p[1]
-#         p[0].append(p[3])
-#     else:
-#         p[0] = [p[1]]
-#
-#
+
+def p_numlist(p):
+    '''numlist : numlist COMMA number
+               | number'''
+
+    if len(p) > 2:
+        p[0] = p[1]
+        p[0].append(p[3])
+    else:
+        p[0] = [p[1]]
+
+
 # # A number. May be an integer or a float
 
 
@@ -158,7 +185,7 @@ def p_boolean_comparison(p):
                 | variable LE variable
                 | variable LT variable
     """
-    p[0] = ('CMP', p[1], p[2], p[3])
+    p[0] = ['CMP', p[1], p[2], p[3]]
 
 
 def p_boolean_expr(p):
@@ -175,7 +202,7 @@ def p_boolean_expr(p):
 
 
 def p_error(p):
-    print(list(p))
+    print(p)
     if not p:
         print("SYNTAX ERROR AT EOF")
 

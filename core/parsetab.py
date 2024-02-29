@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'AND COMMA DIVIDE ELSE EPS EQUALS FALSE FLOAT GAUSS GE GT ID IF INTEGER LCURLY LE LPAREN LT MINUS NE NEWLINE NOT NUMERIC OR PLUS POWER RANDOM RCURLY RETURN RPAREN SEMI STRING THEN TIMES TRUEprogram : program statement\n               | statementstatement : random_var_assignment SEMI\n                  | numeric_var_assignment SEMI\n                  | ifblock\n                  | ifelseblock\n    statement : statement NEWLINErandom_var_assignment : RANDOM variable EQUALS gaussfuncnumeric_var_assignment : NUMERIC variable EQUALS numbergaussfunc : GAUSS LPAREN EPS DIVIDE number COMMA variable RPAREN\n                | GAUSS LPAREN EPS DIVIDE number COMMA number RPAREN\n    ifblock : IF boolean THEN LCURLY NEWLINE program NEWLINE RCURLYifelseblock : IF boolean THEN LCURLY NEWLINE program  RCURLY  ELSE  LCURLY NEWLINE program  RCURLYvariable : IDnumber  : INTEGER\n               | FLOATnumber  : MINUS INTEGER\n               | MINUS FLOATboolean  : TRUE\n                  | FALSEboolean : variable GT variable\n                | variable GE variable\n                | variable LE variable\n                | variable LT variable\n    boolean : boolean AND boolean\n                | boolean OR boolean\n                | NOT boolean\n    '
+_lr_signature = 'AND COMMA DIVIDE ELSE EPS EQUALS FALSE FLOAT GAUSS GE GT ID IF INPUT INTEGER LBRACKET LCURLY LE LPAREN LT MINUS NE NEWLINE NOT NUMERIC OR OUTPUT PLUS POWER RANDOM RBRACKET RCURLY RETURN RPAREN SEMI STRING THEN TIMES TRUEprogram : program statement\n               | statementstatement : random_var_assignment SEMI\n                  | numeric_var_assignment SEMI\n                  | ifblock\n                  | ifelseblock\n                  | inputassignment SEMI\n                  | outputassignment SEMI\n                  | setoutput SEMI\n    statement : statement NEWLINEstatement : NEWLINE statementinputassignment : INPUT EQUALS LBRACKET numlist RBRACKET COMMA LBRACKET numlist RBRACKEToutputassignment : OUTPUT EQUALS LBRACKET numlist RBRACKETrandom_var_assignment : RANDOM variable EQUALS gaussfuncnumeric_var_assignment : NUMERIC variable EQUALS numbergaussfunc : GAUSS LPAREN EPS DIVIDE number COMMA variable RPAREN\n                | GAUSS LPAREN EPS DIVIDE number COMMA number RPAREN\n                | GAUSS LPAREN EPS DIVIDE number COMMA inputindex RPAREN\n    inputindex : INPUT LBRACKET INTEGER RBRACKETsetoutput : OUTPUT LBRACKET INTEGER RBRACKET EQUALS numberifblock : IF boolean THEN LCURLY program  RCURLYifelseblock : IF boolean THEN LCURLY  program  RCURLY  ELSE  LCURLY  program  RCURLYvariable : IDnumlist : numlist COMMA number\n               | numbernumber  : INTEGER\n               | FLOATnumber  : MINUS INTEGER\n               | MINUS FLOATboolean  : TRUE\n                  | FALSEboolean : variable GT variable\n                | variable GE variable\n                | variable LE variable\n                | variable LT variable\n    boolean : boolean AND boolean\n                | boolean OR boolean\n                | NOT boolean\n    '
     
-_lr_action_items = {'RANDOM':([0,1,2,5,6,10,11,12,13,48,50,55,61,64,65,],[7,7,-2,-5,-6,-1,-7,-3,-4,7,7,-12,7,7,-13,]),'NUMERIC':([0,1,2,5,6,10,11,12,13,48,50,55,61,64,65,],[8,8,-2,-5,-6,-1,-7,-3,-4,8,8,-12,8,8,-13,]),'IF':([0,1,2,5,6,10,11,12,13,48,50,55,61,64,65,],[9,9,-2,-5,-6,-1,-7,-3,-4,9,9,-12,9,9,-13,]),'$end':([1,2,5,6,10,11,12,13,55,65,],[0,-2,-5,-6,-1,-7,-3,-4,-12,-13,]),'NEWLINE':([2,5,6,10,11,12,13,38,50,55,58,65,],[11,-5,-6,11,-7,-3,-4,48,52,-12,61,-13,]),'RCURLY':([2,5,6,10,11,12,13,50,52,55,64,65,],[-2,-5,-6,-1,-7,-3,-4,53,55,-12,65,-13,]),'SEMI':([3,4,32,34,35,36,46,47,62,63,],[12,13,-8,-9,-15,-16,-17,-18,-11,-10,]),'ID':([7,8,9,21,25,26,27,28,29,30,57,],[15,15,15,15,15,15,15,15,15,15,15,]),'TRUE':([9,21,25,26,],[18,18,18,18,]),'FALSE':([9,21,25,26,],[19,19,19,19,]),'NOT':([9,21,25,26,],[21,21,21,21,]),'EQUALS':([14,15,16,],[22,-14,23,]),'GT':([15,20,],[-14,27,]),'GE':([15,20,],[-14,28,]),'LE':([15,20,],[-14,29,]),'LT':([15,20,],[-14,30,]),'THEN':([15,17,18,19,31,39,40,41,42,43,44,],[-14,24,-19,-20,-27,-25,-26,-21,-22,-23,-24,]),'AND':([15,17,18,19,31,39,40,41,42,43,44,],[-14,25,-19,-20,25,25,25,-21,-22,-23,-24,]),'OR':([15,17,18,19,31,39,40,41,42,43,44,],[-14,26,-19,-20,26,26,26,-21,-22,-23,-24,]),'RPAREN':([15,35,36,46,47,59,60,],[-14,-15,-16,-17,-18,62,63,]),'GAUSS':([22,],[33,]),'INTEGER':([23,37,51,57,],[35,46,35,35,]),'FLOAT':([23,37,51,57,],[36,47,36,36,]),'MINUS':([23,51,57,],[37,37,37,]),'LCURLY':([24,56,],[38,58,]),'LPAREN':([33,],[45,]),'COMMA':([35,36,46,47,54,],[-15,-16,-17,-18,57,]),'EPS':([45,],[49,]),'DIVIDE':([49,],[51,]),'ELSE':([53,],[56,]),}
+_lr_action_items = {'NEWLINE':([0,1,2,5,6,10,16,17,18,19,20,21,22,23,54,68,74,82,85,91,],[10,10,17,-5,-6,10,17,-10,-3,-4,-7,-8,-9,17,10,10,-21,10,10,-22,]),'RANDOM':([0,1,2,5,6,10,16,17,18,19,20,21,22,23,54,68,74,82,85,91,],[11,11,-2,-5,-6,11,-1,-10,-3,-4,-7,-8,-9,-11,11,11,-21,11,11,-22,]),'NUMERIC':([0,1,2,5,6,10,16,17,18,19,20,21,22,23,54,68,74,82,85,91,],[12,12,-2,-5,-6,12,-1,-10,-3,-4,-7,-8,-9,-11,12,12,-21,12,12,-22,]),'IF':([0,1,2,5,6,10,16,17,18,19,20,21,22,23,54,68,74,82,85,91,],[13,13,-2,-5,-6,13,-1,-10,-3,-4,-7,-8,-9,-11,13,13,-21,13,13,-22,]),'INPUT':([0,1,2,5,6,10,16,17,18,19,20,21,22,23,54,68,74,82,84,85,91,],[14,14,-2,-5,-6,14,-1,-10,-3,-4,-7,-8,-9,-11,14,14,-21,14,90,14,-22,]),'OUTPUT':([0,1,2,5,6,10,16,17,18,19,20,21,22,23,54,68,74,82,85,91,],[15,15,-2,-5,-6,15,-1,-10,-3,-4,-7,-8,-9,-11,15,15,-21,15,15,-22,]),'$end':([1,2,5,6,16,17,18,19,20,21,22,23,74,91,],[0,-2,-5,-6,-1,-10,-3,-4,-7,-8,-9,-11,-21,-22,]),'RCURLY':([2,5,6,16,17,18,19,20,21,22,23,68,74,85,91,],[-2,-5,-6,-1,-10,-3,-4,-7,-8,-9,-11,74,-21,91,-22,]),'SEMI':([3,4,7,8,9,48,50,51,52,66,67,71,77,86,92,93,94,],[18,19,20,21,22,-14,-15,-26,-27,-28,-29,-13,-20,-12,-17,-16,-18,]),'ID':([11,12,13,31,38,39,40,41,42,43,84,],[25,25,25,25,25,25,25,25,25,25,25,]),'TRUE':([13,31,38,39,],[28,28,28,28,]),'FALSE':([13,31,38,39,],[29,29,29,29,]),'NOT':([13,31,38,39,],[31,31,31,31,]),'EQUALS':([14,15,24,25,26,64,],[32,33,35,-23,36,72,]),'LBRACKET':([15,32,33,75,90,],[34,45,46,80,95,]),'GT':([25,30,],[-23,40,]),'GE':([25,30,],[-23,41,]),'LE':([25,30,],[-23,42,]),'LT':([25,30,],[-23,43,]),'THEN':([25,27,28,29,44,55,56,57,58,59,60,],[-23,37,-30,-31,-38,-36,-37,-32,-33,-34,-35,]),'AND':([25,27,28,29,44,55,56,57,58,59,60,],[-23,38,-30,-31,38,38,38,-32,-33,-34,-35,]),'OR':([25,27,28,29,44,55,56,57,58,59,60,],[-23,39,-30,-31,39,39,39,-32,-33,-34,-35,]),'RPAREN':([25,51,52,66,67,87,88,89,97,],[-23,-26,-27,-28,-29,92,93,94,-19,]),'INTEGER':([34,36,45,46,53,70,72,78,80,84,95,],[47,51,51,51,66,51,51,51,51,51,96,]),'GAUSS':([35,],[49,]),'FLOAT':([36,45,46,53,70,72,78,80,84,],[52,52,52,67,52,52,52,52,52,]),'MINUS':([36,45,46,70,72,78,80,84,],[53,53,53,53,53,53,53,53,]),'LCURLY':([37,79,],[54,82,]),'RBRACKET':([47,51,52,61,62,63,66,67,76,83,96,],[64,-26,-27,69,-25,71,-28,-29,-24,86,97,]),'LPAREN':([49,],[65,]),'COMMA':([51,52,61,62,63,66,67,69,76,81,83,],[-26,-27,70,-25,70,-28,-29,75,-24,84,70,]),'EPS':([65,],[73,]),'DIVIDE':([73,],[78,]),'ELSE':([74,],[79,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'program':([0,48,61,],[1,50,64,]),'statement':([0,1,48,50,61,64,],[2,10,2,10,2,10,]),'random_var_assignment':([0,1,48,50,61,64,],[3,3,3,3,3,3,]),'numeric_var_assignment':([0,1,48,50,61,64,],[4,4,4,4,4,4,]),'ifblock':([0,1,48,50,61,64,],[5,5,5,5,5,5,]),'ifelseblock':([0,1,48,50,61,64,],[6,6,6,6,6,6,]),'variable':([7,8,9,21,25,26,27,28,29,30,57,],[14,16,20,20,20,20,41,42,43,44,60,]),'boolean':([9,21,25,26,],[17,31,39,40,]),'gaussfunc':([22,],[32,]),'number':([23,51,57,],[34,54,59,]),}
+_lr_goto_items = {'program':([0,54,82,],[1,68,85,]),'statement':([0,1,10,54,68,82,85,],[2,16,23,2,16,2,16,]),'random_var_assignment':([0,1,10,54,68,82,85,],[3,3,3,3,3,3,3,]),'numeric_var_assignment':([0,1,10,54,68,82,85,],[4,4,4,4,4,4,4,]),'ifblock':([0,1,10,54,68,82,85,],[5,5,5,5,5,5,5,]),'ifelseblock':([0,1,10,54,68,82,85,],[6,6,6,6,6,6,6,]),'inputassignment':([0,1,10,54,68,82,85,],[7,7,7,7,7,7,7,]),'outputassignment':([0,1,10,54,68,82,85,],[8,8,8,8,8,8,8,]),'setoutput':([0,1,10,54,68,82,85,],[9,9,9,9,9,9,9,]),'variable':([11,12,13,31,38,39,40,41,42,43,84,],[24,26,30,30,30,30,57,58,59,60,88,]),'boolean':([13,31,38,39,],[27,44,55,56,]),'gaussfunc':([35,],[48,]),'number':([36,45,46,70,72,78,80,84,],[50,62,62,76,77,81,62,87,]),'numlist':([45,46,80,],[61,63,83,]),'inputindex':([84,],[89,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -29,29 +29,40 @@ _lr_productions = [
   ("S' -> program","S'",1,None,None,None),
   ('program -> program statement','program',2,'p_program','our_parser.py',20),
   ('program -> statement','program',1,'p_program','our_parser.py',21),
-  ('statement -> random_var_assignment SEMI','statement',2,'p_statement','our_parser.py',36),
-  ('statement -> numeric_var_assignment SEMI','statement',2,'p_statement','our_parser.py',37),
-  ('statement -> ifblock','statement',1,'p_statement','our_parser.py',38),
-  ('statement -> ifelseblock','statement',1,'p_statement','our_parser.py',39),
-  ('statement -> statement NEWLINE','statement',2,'p_statement_newline','our_parser.py',46),
-  ('random_var_assignment -> RANDOM variable EQUALS gaussfunc','random_var_assignment',4,'p_statement_random_variable','our_parser.py',52),
-  ('numeric_var_assignment -> NUMERIC variable EQUALS number','numeric_var_assignment',4,'p_statement_numeric_variable','our_parser.py',58),
-  ('gaussfunc -> GAUSS LPAREN EPS DIVIDE number COMMA variable RPAREN','gaussfunc',8,'p_gauss','our_parser.py',63),
-  ('gaussfunc -> GAUSS LPAREN EPS DIVIDE number COMMA number RPAREN','gaussfunc',8,'p_gauss','our_parser.py',64),
-  ('ifblock -> IF boolean THEN LCURLY NEWLINE program NEWLINE RCURLY','ifblock',8,'p_command_if','our_parser.py',70),
-  ('ifelseblock -> IF boolean THEN LCURLY NEWLINE program RCURLY ELSE LCURLY NEWLINE program RCURLY','ifelseblock',12,'p_command_if_else','our_parser.py',75),
-  ('variable -> ID','variable',1,'p_variable','our_parser.py',101),
-  ('number -> INTEGER','number',1,'p_number','our_parser.py',135),
-  ('number -> FLOAT','number',1,'p_number','our_parser.py',136),
-  ('number -> MINUS INTEGER','number',2,'p_number_signed','our_parser.py',144),
-  ('number -> MINUS FLOAT','number',2,'p_number_signed','our_parser.py',145),
-  ('boolean -> TRUE','boolean',1,'p_boolean','our_parser.py',150),
-  ('boolean -> FALSE','boolean',1,'p_boolean','our_parser.py',151),
-  ('boolean -> variable GT variable','boolean',3,'p_boolean_comparison','our_parser.py',156),
-  ('boolean -> variable GE variable','boolean',3,'p_boolean_comparison','our_parser.py',157),
-  ('boolean -> variable LE variable','boolean',3,'p_boolean_comparison','our_parser.py',158),
-  ('boolean -> variable LT variable','boolean',3,'p_boolean_comparison','our_parser.py',159),
-  ('boolean -> boolean AND boolean','boolean',3,'p_boolean_expr','our_parser.py',165),
-  ('boolean -> boolean OR boolean','boolean',3,'p_boolean_expr','our_parser.py',166),
-  ('boolean -> NOT boolean','boolean',2,'p_boolean_expr','our_parser.py',167),
+  ('statement -> random_var_assignment SEMI','statement',2,'p_statement','our_parser.py',34),
+  ('statement -> numeric_var_assignment SEMI','statement',2,'p_statement','our_parser.py',35),
+  ('statement -> ifblock','statement',1,'p_statement','our_parser.py',36),
+  ('statement -> ifelseblock','statement',1,'p_statement','our_parser.py',37),
+  ('statement -> inputassignment SEMI','statement',2,'p_statement','our_parser.py',38),
+  ('statement -> outputassignment SEMI','statement',2,'p_statement','our_parser.py',39),
+  ('statement -> setoutput SEMI','statement',2,'p_statement','our_parser.py',40),
+  ('statement -> statement NEWLINE','statement',2,'p_statement_newline','our_parser.py',47),
+  ('statement -> NEWLINE statement','statement',2,'p_statement_newline_2','our_parser.py',52),
+  ('inputassignment -> INPUT EQUALS LBRACKET numlist RBRACKET COMMA LBRACKET numlist RBRACKET','inputassignment',9,'p_input','our_parser.py',57),
+  ('outputassignment -> OUTPUT EQUALS LBRACKET numlist RBRACKET','outputassignment',5,'p_output','our_parser.py',62),
+  ('random_var_assignment -> RANDOM variable EQUALS gaussfunc','random_var_assignment',4,'p_statement_random_variable','our_parser.py',67),
+  ('numeric_var_assignment -> NUMERIC variable EQUALS number','numeric_var_assignment',4,'p_statement_numeric_variable','our_parser.py',73),
+  ('gaussfunc -> GAUSS LPAREN EPS DIVIDE number COMMA variable RPAREN','gaussfunc',8,'p_gauss','our_parser.py',80),
+  ('gaussfunc -> GAUSS LPAREN EPS DIVIDE number COMMA number RPAREN','gaussfunc',8,'p_gauss','our_parser.py',81),
+  ('gaussfunc -> GAUSS LPAREN EPS DIVIDE number COMMA inputindex RPAREN','gaussfunc',8,'p_gauss','our_parser.py',82),
+  ('inputindex -> INPUT LBRACKET INTEGER RBRACKET','inputindex',4,'p_get_input_index','our_parser.py',88),
+  ('setoutput -> OUTPUT LBRACKET INTEGER RBRACKET EQUALS number','setoutput',6,'p_set_output','our_parser.py',92),
+  ('ifblock -> IF boolean THEN LCURLY program RCURLY','ifblock',6,'p_command_if','our_parser.py',95),
+  ('ifelseblock -> IF boolean THEN LCURLY program RCURLY ELSE LCURLY program RCURLY','ifelseblock',10,'p_command_if_else','our_parser.py',100),
+  ('variable -> ID','variable',1,'p_variable','our_parser.py',126),
+  ('numlist -> numlist COMMA number','numlist',3,'p_numlist','our_parser.py',147),
+  ('numlist -> number','numlist',1,'p_numlist','our_parser.py',148),
+  ('number -> INTEGER','number',1,'p_number','our_parser.py',161),
+  ('number -> FLOAT','number',1,'p_number','our_parser.py',162),
+  ('number -> MINUS INTEGER','number',2,'p_number_signed','our_parser.py',170),
+  ('number -> MINUS FLOAT','number',2,'p_number_signed','our_parser.py',171),
+  ('boolean -> TRUE','boolean',1,'p_boolean','our_parser.py',176),
+  ('boolean -> FALSE','boolean',1,'p_boolean','our_parser.py',177),
+  ('boolean -> variable GT variable','boolean',3,'p_boolean_comparison','our_parser.py',182),
+  ('boolean -> variable GE variable','boolean',3,'p_boolean_comparison','our_parser.py',183),
+  ('boolean -> variable LE variable','boolean',3,'p_boolean_comparison','our_parser.py',184),
+  ('boolean -> variable LT variable','boolean',3,'p_boolean_comparison','our_parser.py',185),
+  ('boolean -> boolean AND boolean','boolean',3,'p_boolean_expr','our_parser.py',191),
+  ('boolean -> boolean OR boolean','boolean',3,'p_boolean_expr','our_parser.py',192),
+  ('boolean -> NOT boolean','boolean',2,'p_boolean_expr','our_parser.py',193),
 ]

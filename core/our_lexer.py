@@ -1,15 +1,16 @@
 from ply import *
 
 keywords = (
-    'IF', 'THEN',  'RETURN',
-    'TRUE', 'FALSE', 'AND', 'OR', 'NOT', 'GAUSS', 'EPS', 'RANDOM', 'NUMERIC', 'ELSE'
+    'IF', 'THEN', 'RETURN',
+    'TRUE', 'FALSE', 'AND', 'OR', 'NOT', 'GAUSS', 'EPS',
+    'RANDOM', 'NUMERIC', 'ELSE', 'OUTPUT', 'INPUT'
 )
 
 tokens = keywords + (
     'EQUALS', 'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'POWER',
     'LPAREN', 'RPAREN', 'LT', 'LE', 'GT', 'GE', 'NE',
     'COMMA', 'SEMI', 'INTEGER', 'FLOAT', 'STRING',
-    'ID', 'NEWLINE', 'LCURLY', 'RCURLY'
+    'ID', 'NEWLINE', 'LCURLY', 'RCURLY', 'LBRACKET', 'RBRACKET'
 )
 
 t_ignore = ' \t'
@@ -43,8 +44,10 @@ t_SEMI = r';'
 t_RANDOM = r'RANDOM'
 t_GAUSS = r'gauss'
 t_EPS = r'eps'
-t_LCURLY = r'{'
-t_RCURLY = r'}'
+t_LCURLY = r'\{'
+t_RCURLY = r'\}'
+t_LBRACKET = r'\['
+t_RBRACKET = r'\]'
 t_INTEGER = r'\d+'
 t_FLOAT = r'((\d*\.\d+)(E[\+-]?\d+)?|([1-9]\d*E[\+-]?\d+))'
 t_STRING = r'\".*?\"'
