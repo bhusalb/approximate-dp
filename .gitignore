@@ -2,3 +2,4 @@ venv
 .idea
 .pyc
 core/__pycache__/
+dreal_output.smt2

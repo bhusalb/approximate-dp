@@ -1,7 +1,7 @@
 import argparse
 
 from core.our_parser import parse
-from core.transformer import get_required_path
+from core.transformer import transform_to_dreal
 
 
 def read_file(file_name):
@@ -25,4 +25,4 @@ if __name__ == "__main__":
 
     # print(program)
 
-    print(get_required_path(program, args))
+    print(transform_to_dreal(program, args))

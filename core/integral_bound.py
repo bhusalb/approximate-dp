@@ -3,7 +3,7 @@ import math
 
 def calculate_bounds(sigma):
     eb = calculate_error_bound()
-    return sigma / math.sqrt(eb)
+    return sigma / math.sqrt(eb), eb
 
 
 def calculate_error_bound(k=10):
@@ -12,5 +12,3 @@ def calculate_error_bound(k=10):
 
 def calculate_sigma(eps_lower, factor):
     return eps_lower / factor
-
-
