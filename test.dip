@@ -1,4 +1,4 @@
-NUMERIC TH = 1;
+NUMERIC TH = 0;
 INPUT = [1, 0], [0, 1];
 OUTPUT = [0, 0];
 RANDOM RT = gauss(eps/4, TH);

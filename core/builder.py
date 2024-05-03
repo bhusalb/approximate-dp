@@ -2,8 +2,7 @@ import copy
 import math
 
 from core.integral_bound import calculate_bounds
-from core.template import TEMPLATE, EPS_INDEX, K_INDEX, INTEGRAL_INDEX
-from sexpdata import dumps, Symbol
+from transformers import transformers
 
 
 def flip_comparison(cmp):
@@ -95,13 +94,13 @@ def get_k_eb_factors(path, lower_eps):
         if path['variables'][condition[1][1]]['type'] == 'RANDOM' and path['variables'][condition[1][1]][
             'dist'] == 'GAUSS':
             sigmas.append(
-                lower_eps / path['variables'][condition[1][1]]['factor']
+                path['variables'][condition[1][1]]['factor'] / lower_eps
             )
 
         if path['variables'][condition[3][1]]['type'] == 'RANDOM' and path['variables'][condition[3][1]][
             'dist'] == 'GAUSS':
             sigmas.append(
-                lower_eps / path['variables'][condition[3][1]]['factor']
+                path['variables'][condition[3][1]]['factor'] / lower_eps
             )
 
     max_sigma = max(sigmas)
@@ -110,114 +109,74 @@ def get_k_eb_factors(path, lower_eps):
     return math.ceil(k), eb, vars_in_conditions
 
 
-def get_constant_for_gauss(vars, path):
-    factor = 1
+def get_condition_dict(conditions, vars):
+    mydict = dict()
+    n = len(conditions)
     for var in vars:
-        factor *= path['variables'][var]['factor']
+        mydict[var] = []
+        for i in range(n):
+            if var == conditions[i][1][1] or var == conditions[i][3][1]:
+                mydict[var].append(i)
 
-    factor /= math.sqrt(math.pi ** len(vars))
-
-    return [Symbol('/'), factor, [Symbol('pow'), [Symbol('sqrt'), Symbol('eps')], len(vars)]]
-
-
-def outer_integral(inner_integrals, var, factor):
-    template = [Symbol('integral'),
-                [Symbol('-'), Symbol('k')], Symbol('k'),
-                [Symbol('lambda'), [Symbol(var), Symbol('Real')],
-                 [Symbol('*'),
-                  [Symbol('exp'),
-                   [Symbol('-'),
-                    [Symbol('/'),
-                     [Symbol('*'), Symbol(var), Symbol(var), Symbol('eps'), Symbol('eps')],
-                     [Symbol('*'), 2, factor ** 2]]]]]]]
-
-    for inner_integral in inner_integrals:
-        template[3][2].insert(1, inner_integral)
-
-    return template
+    return mydict
 
 
-def inner_integral(factor, input, var, outer_var):
-    return [Symbol('integral'),
-            [Symbol('-'), input, Symbol('k')],
-            Symbol(outer_var),
-            [Symbol('lambda'),
-             [Symbol(var), Symbol('Real')],
-             [Symbol('exp'),
-              [Symbol('-'),
-               [Symbol('/'),
-                [Symbol('*'),
-                 [Symbol('-'), Symbol(var), input],
-                 [Symbol('-'), Symbol(var), input],
-                 Symbol('eps'),
-                 Symbol('eps')],
-                [Symbol('*'), 2, factor ** 2]]]]]]
+def inner_integral(conditions_dict, conditions, visited, var):
+    inner = []
+    for c_index in conditions_dict[var]:
+        if c_index in visited:
+            continue
+        visited.append(c_index)
+
+        condition = conditions[c_index]
+        operator = condition[2]
+        a = condition[1][1]
+        b = condition[3][1]
+        inner_dict = None
+        if a == var:
+            if operator == '<' or operator == '<=':
+                inner_dict = {'var': b, 'upper_limit': var, 'lower_limit': '-k',
+                              'inner': inner_integral(conditions_dict, conditions, visited, b)}
+            if operator == '>' or operator == '>=':
+                inner_dict = {'var': b, 'upper_limit': 'k', 'lower_limit': var,
+                              'inner': inner_integral(conditions_dict, conditions, visited, b)}
+
+        if b == var:
+            if operator == '<' or operator == '<=':
+                inner_dict = {'var': a, 'upper_limit': 'k', 'lower_limit': var,
+                              'inner': inner_integral(conditions_dict, conditions, visited, a)}
+            if operator == '>' or operator == '>=':
+                inner_dict = {'var': a, 'upper_limit': var, 'lower_limit': '-k',
+                              'inner': inner_integral(conditions_dict, conditions, visited, a)}
+
+        if inner_dict:
+            inner.append(inner_dict)
+
+    return inner
 
 
-def add_error_eb(exp, eb):
-    return [Symbol('+'), exp, eb]
+def get_integrals(conditions, vars):
+    integrals = []
+    conditions_dict = get_condition_dict(conditions, vars)
+    sorted_vars = sorted(conditions_dict.keys(), key=lambda k: len(conditions_dict[k]), reverse=True)
+    visited = []
+
+    for var in sorted_vars:
+        inner = inner_integral(conditions_dict, conditions, visited, var)
+        if inner:
+            integrals.append({'var': var, 'upper_limit': 'k', 'lower_limit': '-k', 'inner': inner})
+
+    return integrals
 
 
-def outer_integral_and_constant(outer_integral, constant):
-    return [Symbol('*'), constant, outer_integral]
-
-
-def exp_eps(expression):
-    return [Symbol('*'), [Symbol('exp'), Symbol('eps')], expression]
-
-
-def transform_to_dreal(program, args):
+def build(program, args):
     path = get_required_path(program, args)
 
     k, eb, vars = get_k_eb_factors(path, args.eps[0])
 
-    dreal_template = copy.deepcopy(TEMPLATE)
+    integrals = get_integrals(path['conditions'], vars)
 
-    constant_factor = get_constant_for_gauss(vars, path)
-
-    # print(dumps(constant_factor))
-
-    dreal_template[EPS_INDEX][1][2] = args.eps[0]
-    dreal_template[EPS_INDEX + 1][1][2] = args.eps[1]
-    dreal_template[K_INDEX][1][2] = k
-
-    outer_var = path['conditions'][0][3][1]
-    inner_integrals = []
-    inner_integrals_adj = []
-    for var in vars:
-        if var != outer_var:
-            # print(path['variables'][var])
-            inner_integrals.append(
-                inner_integral(
-                    path['variables'][var]['factor'],
-                    path['variables'][var]['mean']['a'],
-                    var,
-                    outer_var
-                )
-            )
-
-            inner_integrals_adj.append(
-                inner_integral(
-                    path['variables'][var]['factor'],
-                    path['variables'][var]['mean']['b'],
-                    var,
-                    outer_var
-                )
-            )
-
-    outer = outer_integral(inner_integrals, outer_var, path['variables'][outer_var]['factor'])
-    outer_adj = outer_integral(inner_integrals_adj, outer_var, path['variables'][outer_var]['factor'])
-
-    outer_constant = outer_integral_and_constant(outer, constant_factor)
-    outer_constant_adj = outer_integral_and_constant(outer_adj, constant_factor)
-    outer_constant_adj = exp_eps(outer_constant_adj)
-    outer_constant_adj = add_error_eb(outer_constant_adj, eb)
-
-    dreal_template[INTEGRAL_INDEX][1][1].append(outer_constant)
-    dreal_template[INTEGRAL_INDEX][1][1].append(outer_constant_adj)
-
-    with open('dreal_output.smt2', 'w+') as f:
-        f.write(dumps(dreal_template)[1:-1])
+    transformers[args.engine](integrals, k, eb, path['variables'], args)
 
 
 def get_required_path(program, args):
@@ -237,5 +196,3 @@ def get_required_path(program, args):
             break
 
     return required_path
-    # return paths
-    # return paths

@@ -193,12 +193,11 @@ def p_boolean_expr(p):
                 | boolean OR boolean
                 | NOT boolean
     """
-    if p[2] == 'and':
-        p[0] = p[1] and p[2]
-    elif p[2] == 'or':
-        p[0] = p[1] or p[2]
-    elif p[1] == 'not':
-        p[0] = not p[2]
+
+    if p[2] in ['and', 'or']:
+        p[0] = ['GATE', p[1], p[2], p[3]]
+    else:
+        p[0] = ['GATE', p[1], p[2]]
 
 
 def p_error(p):
