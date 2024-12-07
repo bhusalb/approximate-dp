@@ -1,6 +1,6 @@
 from ply import *
 
-from core import our_lexer
+from . import our_lexer
 
 tokens = our_lexer.tokens
 
@@ -212,7 +212,6 @@ bparser = yacc.yacc()
 def parse(data, debug=0):
     bparser.error = 0
     p = bparser.parse(data, debug=debug)
-
     # print(p)
     if bparser.error:
         return None

@@ -1,16 +1,23 @@
 from sexpdata import Symbol, dumps
 
 
-def add_two_expressions(a, b):
-    return [Symbol('+'), a, b]
+def add_expressions(*args):
+    return [Symbol('+'), *args]
 
 
-def subtract(*args):
+def subtract_expressions(*args):
     return [Symbol('-'), *args]
 
 
 def multiply_expressions(*args):
     return [Symbol('*'), *args]
+
+
+OPERATIONS = {
+    'add': add_expressions,
+    'product': multiply_expressions,
+    'subtract': subtract_expressions
+}
 
 
 def exp_eps(expression):
@@ -72,7 +79,7 @@ def write_to_file(file_name, program):
         f.write(dumps(boiler_plate(program))[1:-1])
 
 
-def process_integral(integral, vars, use_adj=False):
+def process_integral(integral, use_adj=False):
     mu = None
     var = integral['var']
     sigma = [Symbol('/'), vars[var]['factor'], Symbol('eps')]
@@ -100,12 +107,14 @@ def process_integral(integral, vars, use_adj=False):
                          var, expr)
 
 
-def process(integrals, k, eb, vars, args):
+def process(expression, k, eb, args):
+    opr = expression['opr']
+
     prd = []
     prd_adj = []
-    for integral in integrals:
-        prd.append(process_integral(integral, vars))
-        prd_adj.append(process_integral(integral, vars, True))
+    for integral in expression['integrals']:
+        prd.append(process_integral(integral))
+        prd_adj.append(process_integral(integral, True))
 
     len_of_prd = len(prd)
     if len_of_prd == 1:

@@ -1,6 +1,8 @@
 venv
 .idea
 .pyc
-core/__pycache__/
+src/core/__pycache__/
 dreal_output.smt2
-transformers/__pycache__/
+src/transformers/__pycache__/
+temp_program
+temp_program.c
