@@ -1,3 +1,4 @@
+INPUTSIZE 3;
 NUMERIC TH = 0;
 OUTPUT = [0];
 RANDOM X = gauss(eps/8, TH);

@@ -3,7 +3,7 @@ from ply import *
 keywords = (
     'IF', 'THEN', 'RETURN',
     'TRUE', 'FALSE', 'AND', 'OR', 'NOT', 'GAUSS', 'EPS',
-    'RANDOM', 'NUMERIC', 'ELSE', 'OUTPUT', 'INPUT'
+    'RANDOM', 'NUMERIC', 'ELSE', 'OUTPUT', 'INPUT', 'INPUTSIZE'
 )
 
 tokens = keywords + (

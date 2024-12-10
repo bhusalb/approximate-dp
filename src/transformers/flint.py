@@ -18,6 +18,7 @@ typedef struct Integral {
     int lower_limit_indices[100];
     int lower_limit_size;
     int index;
+    int holomorphic;
 } Integral;
 
 
@@ -105,7 +106,11 @@ void compute_lower_limit(acb_t limit, Parameters param, slong prec) {
         acb_mul(prd, param.k, prd, prec);
         acb_sub(limit, param.root->mu, prd, prec);
     } else {
-       acb_set(limit, param.vars[find_max(param)]);
+        if (param.root->lower_limit_size == 1) {
+            acb_set(limit, param.vars[param.root->lower_limit_indices[0]]);
+        } else {
+            acb_set(limit, param.vars[find_max(param)]);
+        }
     }
 }
 
@@ -119,10 +124,11 @@ void compute_upper_limit(acb_t limit, Parameters param, slong prec) {
 // Gaussian function for integration
 int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order, slong prec) {
     acb_t norm_factor, exponent, diff, sigma, sigma_sq, const_factor, two, pi;
-
     Parameters param = *(Parameters *) my_param;
-    
     Integral integral = *(param.root);
+    
+    if (order > 1)
+		flint_abort();
     
     acb_init(param.vars[integral.index]);
     acb_set(param.vars[integral.index], x);
@@ -130,7 +136,7 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
     acb_init(sigma);
     acb_div(sigma, integral.factor, param.eps, prec);
 
-
+    //printf("order %ld\n", order);
     acb_init(norm_factor);
     acb_init(exponent);
     acb_init(diff);
@@ -165,9 +171,7 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
         acb_t inner_res;
         acb_init(inner_res);
         Integral inner = *(integral.inner);
-
         param.root = &inner;
-
         slong goal = prec;
 
         mag_t tol;
@@ -183,11 +187,13 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
         acb_t upper_limit;
         acb_init(upper_limit);
         compute_upper_limit(upper_limit, param, prec);
-
         acb_calc_integrate(inner_res, gaussian_function, &(param), lower_limit, upper_limit, goal, tol, options, prec);
         acb_mul(result, result, inner_res, prec);
     }
-
+    
+     if (integral.holomorphic == 0 && order == 1) {
+        acb_indeterminate(result);
+     }
 
     // Clear memory
     acb_clear(norm_factor);
@@ -203,15 +209,23 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
 
 
 
-void set_integral(Integral *integral, int index, double mu, double factor, int has_infinity) {
+void set_integral(Integral *integral, int index, double mu, double factor, int has_infinity, int lower_indices[], int lower_indices_size) {
     acb_init(integral->mu);
     acb_set_d(integral->mu, mu);
-
     acb_init(integral->factor);
     acb_set_d(integral->factor, factor);
-
+    integral->lower_limit_size = lower_indices_size;
+    if (lower_indices_size) { 
+        assign_array(integral->lower_limit_indices, lower_indices, lower_indices_size);
+    }
     integral->has_infinity = has_infinity;
     integral->index = index;
+    integral->holomorphic = 1;
+    
+    if (!has_infinity && lower_indices_size > 1) {
+        integral->holomorphic = 0;
+    }
+    
 }
 
 {{WHOLE_BLOCK}}
@@ -219,9 +233,10 @@ void set_integral(Integral *integral, int index, double mu, double factor, int h
 
 int check_for_an_input_pair(int input[], int input_adj[], int input_length, double eps, double delta, int debug) {
     int (*compute_probability[])(acb_ptr, double, slong, double, int[]) = { {{ARRAY}} };
+    char paths_output[][20] = { {{PATHS_OUTPUT}} }; 
     int eb[] = { {{EB}} };
     int compute_probability_size = sizeof(compute_probability) / sizeof(compute_probability[0]);
-    slong prec[] = { 16, 32, 64, 128 };
+    slong prec[] = { 8, 16, 32 };
     
     int prec_size = sizeof(prec) / sizeof(prec[0]);
 
@@ -257,6 +272,8 @@ int check_for_an_input_pair(int input[], int input_adj[], int input_length, doub
 
             acb_get_real(arb_prob, prob);
             acb_get_real(arb_prob_adj, prob_adj);
+            
+            arb_add(arb_prob, arb_prob, error_bound, prec[j]);
 
             arb_t product_eps_prob_adj;
             arb_init(product_eps_prob_adj);
@@ -276,14 +293,16 @@ int check_for_an_input_pair(int input[], int input_adj[], int input_length, doub
             }
 
             if (debug) {
-                printf("------Info for function Path %d, k = %d, prec = %ld------", i, k, prec[j]);
+                printf("------Info for path %s, k = %d, prec = %ld------", paths_output[i], k, prec[j]);
                 printf("\nProb: ");
-                arb_printd(arb_prob, 5);
+                arb_printd(arb_prob, 3);
                 printf(" , Prob': ");
-                arb_printd(arb_prob_adj, 5);
+                arb_printd(arb_prob_adj, 3);
 
                 printf("\nexp(ε) * Prob': ");
-                arb_printd(product_eps_prob_adj, 5);
+                arb_printd(product_eps_prob_adj, 3);
+                printf("\nError Bound: ");
+                arb_printd(error_bound, 3);
                 printf("\n");
             }
 
@@ -332,35 +351,19 @@ void print_input(int input[], int input_adj[], int input_length) {
 
 int main(int argc, char *argv[]) {
     double eps, delta;
-    int input_length;
+    int input_length = {{INPUT_SIZE}};
     int debug = 0;
 
     for (int i = 1; i < argc; i++)
     {
-
         if (!strcmp(argv[i], "-delta"))
-        {
             delta = atof(argv[i + 1]);
-        }
-
-
-        if (!strcmp(argv[i], "-n"))
-        {
-            input_length = atol(argv[i + 1]);
-        }
-
-
-
-        if (!strcmp(argv[i], "-eps"))
-        {
+        
+        if (!strcmp(argv[i], "-eps")) 
             eps = atof(argv[i+1]);
-        }
-
-
+            
         if (!strcmp(argv[i], "-debug"))
-        {
             debug = 1;
-        }
     }
     
     int total = (int) pow(2, input_length);
@@ -496,30 +499,28 @@ def has_infinity(integral):
 
 
 def get_lower_limit_incides(integral, variable_map):
-    vars = integral['lower_limit'][1]
-    indices = []
-    for var in vars:
-        indices.append(str(variable_map[var]))
+    if has_infinity(integral) == 0:
+        vars = integral['lower_limit'][1]
+        indices = []
+        for var in vars:
+            indices.append(str(variable_map[var]))
 
-    return '{' + ','.join(indices) + '}'
+        return '{' + ','.join(indices) + '}', len(integral['lower_limit'][1])
+    else:
+        return '{}', 0
 
 
 def get_integral(integral, current_index, past_index, variable_map):
-    template = f'''     
-     Integral integral{current_index};
-     set_integral(&integral{current_index}, {variable_map[integral["var_name"]]}, {get_mean_value(integral)}, {get_factor_value(integral)}, {has_infinity(integral)});
-    '''
 
-    if has_infinity(integral) == 0:
-        size = len(integral['lower_limit'][1])
-        template += f'''
-    int lower_limit_indices{current_index}[] = {get_lower_limit_incides(integral, variable_map)};
-    integral{current_index}.lower_limit_size = {size};
-    assign_array(integral{current_index}.lower_limit_indices, lower_limit_indices{current_index}, {size});
-        '''
+    lower_limit_indices, lower_limit_size = get_lower_limit_incides(integral, variable_map)
+
+    template = f'''     
+    Integral integral{current_index};
+    int lower_limit_indices{current_index}[] = {get_lower_limit_incides(integral, variable_map)[0]};
+    set_integral(&integral{current_index}, {variable_map[integral["var_name"]]}, {get_mean_value(integral)}, {get_factor_value(integral)}, {has_infinity(integral)}, lower_limit_indices{current_index}, {lower_limit_size});
+    '''
     if past_index:
         template += f'''
-        
     integral{past_index}.inner = &integral{current_index};
         '''
 
@@ -590,7 +591,7 @@ def get_block_for_path(index, path):
     return block, eb
 
 
-def process(paths, args):
+def process(paths, paths_output, args):
     whole_block = ''
     probability_array = []
     eb_array = []
@@ -602,6 +603,8 @@ def process(paths, args):
 
     out = cprog.replace('{{WHOLE_BLOCK}}', whole_block)
     out = out.replace('{{ARRAY}}', ', '.join(probability_array))
+    out = out.replace('{{PATHS_OUTPUT}}', ','.join(list(map(lambda x: '"' + x + '"', paths_output))))
     out = out.replace('{{EB}}', ', '.join(eb_array))
+    out = out.replace('{{INPUT_SIZE}}', str(args.input_size))
 
     write_to_file('temp_program.c', out)

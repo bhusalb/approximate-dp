@@ -84,6 +84,9 @@ def handle_statement(program, index, args, path, paths):
     if statement[0] == 'SET' and statement[1] == 'OUTPUT':
         handle_set_output(statement, path)
 
+    if statement[0] == 'INPUT_SIZE':
+        args.input_size = statement[1]
+
     handle_statement(program, index + 1, args, path, paths)
 
 
@@ -187,7 +190,7 @@ def build(program, args):
 
         expressions[str(path['output'])].append(get_integrals(graph))
 
-    return list(expressions.values())
+    return list(expressions.values()), list(expressions.keys())
 
 def get_paths(program, args):
     path = {'variables': dict(), 'input': None, 'output': None, 'conditions': []}

@@ -1,3 +1,4 @@
+INPUTSIZE 2;
 NUMERIC TH = 0;
 OUTPUT = [0, 0];
 RANDOM X = gauss(eps/4, TH);

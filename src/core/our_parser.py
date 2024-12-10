@@ -35,6 +35,7 @@ def p_statement(p):
                   | numeric_var_assignment SEMI
                   | ifblock
                   | ifelseblock
+                  | setinputsize SEMI
                   | inputassignment SEMI
                   | outputassignment SEMI
                   | setoutput SEMI
@@ -90,6 +91,11 @@ def p_get_input_index(p):
 def p_set_output(p):
     '''setoutput : OUTPUT LBRACKET INTEGER RBRACKET EQUALS number'''
     p[0] = 'SET', 'OUTPUT', int(p[3]), p[6]
+
+
+def p_set_input_size(p):
+    '''setinputsize : INPUTSIZE number'''
+    p[0] = 'INPUT_SIZE', int(p[2])
 
 
 def p_command_if(p):
