@@ -301,17 +301,22 @@ int main(int argc, char *argv[]) {
     double eps, delta;
     int input_length = {{INPUT_SIZE}};
     int debug = 0;
+    int k;
 
     for (int i = 1; i < argc; i++)
     {
         if (!strcmp(argv[i], "-delta"))
             delta = atof(argv[i + 1]);
-        
         if (!strcmp(argv[i], "-eps")) 
             eps = atof(argv[i+1]);
-            
+        if (!strcmp(argv[i], "-k"))
+            k = atoi(argv[i + 1]);
         if (!strcmp(argv[i], "-debug"))
             debug = 1;
+    }
+    
+    if (debug) {
+        printf("k=%d, eps=%f, delta=%f, input_length=%d\n\n", k, eps, delta, input_length);
     }
     
     int total_inputs = (int) pow(2, input_length);
@@ -323,7 +328,6 @@ int main(int argc, char *argv[]) {
     int (*compute_probability[])(arb_ptr, double, slong, double, int[]) = { {{ARRAY}} };
     int compute_probability_size = sizeof(compute_probability) / sizeof(compute_probability[0]);
         
-    int k = 4;
     arb_t arb_eps;
     arb_init(arb_eps);
     arb_set_d(arb_eps, eps);
