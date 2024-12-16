@@ -8,3 +8,4 @@ temp_program
 temp_program.c
 src/core/parser.out
 src/core/parsetab.py
+result.csv
