@@ -70,33 +70,17 @@ double calculate_error_bound(float k) {
     return exp(- (pow(k, 2)) / 2);
 }
 
-// Function to generate all  arrays of size n
-void generate_all_combinations(int size, int combinations[][2][100]) { // Use the same max size here
-    int total = (int) pow(2, size);
-
-    for (int i = 0; i < total; i++) {
-        // Generate the i-th binary array
-        int current_array[size]; // Use a max size (e.g., 100)
-        for (int j = 0; j < size; j++) {
-            current_array[size - j - 1] = (i >> j) & 1;  // Extract the j-th bit of i
-        }
-
-        // Generate and store all adjacent arrays
-        for (int j = 0; j < size; j++) {
-            int current_adj[size]; // Use a max size (e.g., 100)
-            // Copy original binary array to adjacent array
-            memcpy(current_adj, current_array, size * sizeof(int));
-
-            // Flip the j-th bit to create an adjacent array
-            current_adj[j] = (current_adj[j] == 0) ? 1 : 0;
-
-            // Store current_array and current_adj in combinations
-            memcpy(combinations[size * i + j][0], current_array, size * sizeof(int));
-            memcpy(combinations[size * i + j][1], current_adj, size * sizeof(int));
+int** generate_combinations(int size) {
+    int total_combinations = pow(2, size); 
+    int** combinations = (int**)malloc(total_combinations * sizeof(int*));
+    for (int i = 0; i < total_combinations; i++) {
+        combinations[i] = (int*)malloc(size * sizeof(int));
+        for (int j = size - 1; j >= 0; j--) {
+            combinations[i][size - 1 - j] = (i >> j) & 1;
         }
     }
+    return combinations;
 }
-
 
 void compute_lower_limit(acb_t limit, Parameters param, slong prec) {
     if (param.root->has_infinity == 1) {
@@ -230,110 +214,74 @@ void set_integral(Integral *integral, int index, double mu, double factor, int h
 
 {{WHOLE_BLOCK}}
 
-
-int check_for_an_input_pair(int input[], int input_adj[], int input_length, double eps, double delta, int debug) {
-    int (*compute_probability[])(acb_ptr, double, slong, double, int[]) = { {{ARRAY}} };
-    char paths_output[][20] = { {{PATHS_OUTPUT}} }; 
+int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr arb_eps, double delta, int k, slong prec, int debug) {
+    char paths_output[][100] = { {{PATHS_OUTPUT}} }; 
     int eb[] = { {{EB}} };
-    int compute_probability_size = sizeof(compute_probability) / sizeof(compute_probability[0]);
-    slong prec[] = { 8, 16, 32 };
     
-    int prec_size = sizeof(prec) / sizeof(prec[0]);
+    arf_t sum_delta;
+    arf_init(sum_delta);
+    arf_zero(sum_delta);
+    
+    for (int i = 0; i < probs_size; i++) {
+        arb_t arb_prob_eb, product_eps_prob_adj;
+        arb_init(arb_prob_eb);
+        arb_init(product_eps_prob_adj);
+        
+        arf_t l, u, diff;
+        arf_init(l);
+        arf_init(u);
+        arf_init(diff);
+        
+        arb_set_d(arb_prob_eb, eb[i] * calculate_error_bound(k));
+        arb_add(arb_prob_eb, probs[i], arb_prob_eb, prec);
 
-    int k = 4;
-    arb_t arb_eps;
-    arb_init(arb_eps);
-    arb_set_d(arb_eps, eps);
+        arb_exp(product_eps_prob_adj, arb_eps, prec);
+        arb_mul(product_eps_prob_adj, product_eps_prob_adj, probs_adj[i], prec);
 
-    for (int j = 0; j < prec_size; j++) {
-        arf_t sum_delta;
-        arf_init(sum_delta);
-        arf_zero(sum_delta);
-
-        for (int i = 0; i < compute_probability_size; i++) {
-            acb_t prob, prob_adj;
-            acb_init(prob);
-            acb_init(prob_adj);
-
-            arb_t arb_prob, arb_prob_adj, error_bound, arb_prob_eb;
-            arf_t l, u, diff;
-            arf_init(l);
-            arf_init(u);
-            arf_init(diff);
-            compute_probability[i](prob, eps, prec[j], k, input);
-            compute_probability[i](prob_adj, eps, prec[j], k, input_adj);
-
-            arb_init(arb_prob);
-            arb_init(arb_prob_adj);
-            arb_init(error_bound);
-            arb_init(arb_prob_eb);
-
-            arb_set_d(error_bound, eb[i] * calculate_error_bound(k));
-
-            acb_get_real(arb_prob, prob);
-            acb_get_real(arb_prob_adj, prob_adj);
-            
-            arb_add(arb_prob, arb_prob, error_bound, prec[j]);
-
-            arb_t product_eps_prob_adj;
-            arb_init(product_eps_prob_adj);
-
-            arb_exp(product_eps_prob_adj, arb_eps, prec[j]);
-            arb_mul(product_eps_prob_adj, product_eps_prob_adj, arb_prob_adj, prec[j]);
-
-
-            //error bound
-            arb_add(arb_prob_eb, arb_prob, error_bound, prec[j]);
-
-            if (!arb_le(arb_prob, product_eps_prob_adj)) {
-                arb_get_ubound_arf(u, arb_prob, prec[j]);
-                arb_get_lbound_arf(l, product_eps_prob_adj, prec[j]);
-                arf_sub(diff, u, l, prec[j], ARF_RND_NEAR);
-                arf_add(sum_delta, sum_delta, diff, prec[j], ARF_RND_NEAR);
-            }
-
-            if (debug) {
-                printf("------Info for path %s, k = %d, prec = %ld------", paths_output[i], k, prec[j]);
-                printf("\nProb: ");
-                arb_printd(arb_prob, 3);
-                printf(" , Prob': ");
-                arb_printd(arb_prob_adj, 3);
-
-                printf("\nexp(ε) * Prob': ");
-                arb_printd(product_eps_prob_adj, 3);
-                printf("\nError Bound: ");
-                arb_printd(error_bound, 3);
-                printf("\n");
-            }
-
-
-            acb_clear(prob);
-            acb_clear(prob_adj);
-            arb_clear(arb_eps);
-            arb_clear(arb_prob);
-            arb_clear(arb_prob_adj);
-            arb_clear(error_bound);
+        if (!arb_le(arb_prob_eb, product_eps_prob_adj)) {
+            arb_get_ubound_arf(u, arb_prob_eb, prec);
+            arb_get_lbound_arf(l, product_eps_prob_adj, prec);
+            arf_sub(diff, u, l, prec, ARF_RND_NEAR);
+            arf_add(sum_delta, sum_delta, diff, prec, ARF_RND_NEAR);
+        }
+        
+        
+        if (debug) {
+            printf("------Info for path %s, k = %d, prec = %ld------", paths_output[i], k, prec);
+            printf("\nProb: ");
+            arb_printd(probs[i], 3);
+            printf(" , Prob': ");
+            arb_printd(probs_adj[i], 3);
+            printf("\nProb + eb: ");
+            arb_printd(arb_prob_eb, 3);
+            printf("\nexp(ε) * Prob': ");
+            arb_printd(product_eps_prob_adj, 3);
+            printf("\n");
         }
 
-
-        if (arf_cmp_d(sum_delta, delta) <= 0) {
-            if (debug) {
-                printf("\nPassed!\n");
-            }
-            return 1;
-        }
+        arb_clear(arb_prob_eb);
+        arb_clear(product_eps_prob_adj);
+        arf_clear(l);
+        arf_clear(u);
+        arf_clear(diff);
     }
 
+
+    if (arf_cmp_d(sum_delta, delta) <= 0) {
+        if (debug) {
+            printf("\nPassed!\n");
+        }
+        return 1;
+    }
+    
+    if (debug) {
+        printf("\nFailed!\n");
+    }
+  
     return 0;
 }
 
-
-
-
 void print_input(int input[], int input_adj[], int input_length) {
-
-    printf("------------------------------------------------------------\n");
-
     printf("in = ");
     for (int i = 0; i < input_length; i++) {
         printf("%d ", input[i]);
@@ -366,28 +314,56 @@ int main(int argc, char *argv[]) {
             debug = 1;
     }
     
-    int total = (int) pow(2, input_length);
-    int combinations[total * input_length][2][100];
+    int total_inputs = (int) pow(2, input_length);
+    int** inputs = generate_combinations(input_length);
+    
+    slong prec[] = { 8, 16, 32 };
+    int prec_size = sizeof(prec) / sizeof(prec[0]);
 
-    generate_all_combinations(input_length, combinations);
+    int (*compute_probability[])(arb_ptr, double, slong, double, int[]) = { {{ARRAY}} };
+    int compute_probability_size = sizeof(compute_probability) / sizeof(compute_probability[0]);
+        
+    int k = 4;
+    arb_t arb_eps;
+    arb_init(arb_eps);
+    arb_set_d(arb_eps, eps);
     
-    int all_dp = 1;
-    
-    for (int input_index = 0; input_index < total * input_length; input_index++) {
+    for (int prec_index = 0; prec_index < prec_size; prec_index++) {
+        arb_t probs[total_inputs][compute_probability_size];
         if (debug) {
-            print_input(combinations[input_index][0], combinations[input_index][1], input_length);
+            printf("----------------------Precision: %ld----------------------\n", prec[prec_index]);
         }
-        int is_dp = check_for_an_input_pair(combinations[input_index][0], combinations[input_index][1], input_length, eps, delta, debug);
-        all_dp = all_dp && is_dp;
+        for (int input_index = 0; input_index < total_inputs; input_index++) {
+            for (int path_index = 0; path_index < compute_probability_size; path_index++) {
+                arb_init(probs[input_index][path_index]);
+                compute_probability[path_index](probs[input_index][path_index], eps, prec[prec_index], k, inputs[input_index]);
+            }
+        }
+        
+        int is_dp = 1;
+        for (int i = 0; i < total_inputs; i++) {
+            for (int j = 0; j < total_inputs; j++) {
+                if (i != j) {
+                    if (debug && is_dp) {
+                        print_input(inputs[i], inputs[j], input_length);
+                    }
+                    is_dp = is_dp && check_for_an_pair(probs[i], probs[j], compute_probability_size, arb_eps, delta, k, prec[prec_index], debug);
+                }
+            }
+        }
+        
+        if (is_dp) {
+            if (debug) {
+                printf("-----------------------------------------------------------------------------------\n");
+                printf("Differential Private? Yes");
+            } else {
+                printf("{ \"is_dp\":, %d }", is_dp);
+            }
+            
+            return 0;
+        }
     }
-    
-    printf("-------------------------------------\n");
-    if (all_dp) {
-        printf("Differentially Private? Yes");
-    } else {
-        printf("Differentially Private? No");
-    }
-    
+        
     return 0;
 }
 '''
@@ -416,14 +392,14 @@ int product_integrals_{{INDEX}}(acb_ptr result, double eps, slong prec, double k
 
 def function_block_template():
     return '''
-int compute_probability_path_{{INDEX}}(acb_ptr result, double eps, slong prec, double k, int input[])
+int compute_probability_path_{{INDEX}}(arb_ptr arb_result, double eps, slong prec, double k, int input[])
 {
-
-    int (*compute_probability[])(acb_ptr, double, slong, double, int[]) = { {{ARRAY}} };
-
-    int compute_probability_size = sizeof(compute_probability) / sizeof(compute_probability[0]);
-
+    acb_t result;
+    acb_init(result);
     acb_zero(result);
+    
+    int (*compute_probability[])(acb_ptr, double, slong, double, int[]) = { {{ARRAY}} };
+    int compute_probability_size = sizeof(compute_probability) / sizeof(compute_probability[0]);
 
     for (int i = 0; i < compute_probability_size; i++) {
         acb_t inner;
@@ -432,6 +408,7 @@ int compute_probability_path_{{INDEX}}(acb_ptr result, double eps, slong prec, d
         acb_add(result, result, inner, prec);
     }
     
+    acb_get_real(arb_result, result);
     return 0;
 }
     '''
