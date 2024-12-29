@@ -1,0 +1,11 @@
+INPUTSIZE 2;
+RANDOM TH = gauss(eps/4, 0);
+OUTPUT = [0];
+RANDOM Q1 = gauss(eps/2, INPUT[0]);
+RANDOM Q2 = gauss(eps/2, INPUT[1]);
+
+IF Q1 > Q2 THEN {
+    OUTPUT[0] = 0;
+} ELSE {
+    OUTPUT[0] = 1;
+}

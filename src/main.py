@@ -4,7 +4,7 @@ import sys
 from core.builder import build
 from core.our_parser import parse
 from core.clang import Clang
-from transformers import transformers
+from transformers import flint, mathematica
 
 
 def read_file(file_name):
@@ -21,8 +21,6 @@ def get_args():
     parser.add_argument('--k', '-k', type=int, required=False, default=4)
     parser.add_argument('--debug', '-dd', action='store_true', required=False, default=False)
 
-    parser.add_argument('--engine', type=str, required=False, default='flint')
-
     return parser.parse_args()
 
 
@@ -37,7 +35,10 @@ if __name__ == "__main__":
         print("Couldn't find input size")
         sys.exit(0)
 
-    transformers[args.engine](expressions, paths_output, args)
+    flint.process(expressions, paths_output, args)
+
+    if args.debug:
+        mathematica.process(expressions, paths_output, args)
 
     clang = Clang('gcc', library_dirs=['flint'])
     clang.compile_binary('temp_program.c', 'temp_program')

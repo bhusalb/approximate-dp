@@ -9,9 +9,7 @@ RANDOM W = gauss(eps/2, INPUT[2]);
 IF X > Y THEN {
     IF Y < W THEN {
         IF X < Z THEN {
-            IF W < Z THEN {
-                 OUTPUT[0] = 1;
-            }
+            OUTPUT[0] = 1;
         }
     }
 }

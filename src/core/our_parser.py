@@ -36,7 +36,6 @@ def p_statement(p):
                   | ifblock
                   | ifelseblock
                   | setinputsize SEMI
-                  | inputassignment SEMI
                   | outputassignment SEMI
                   | setoutput SEMI
     '''
@@ -54,11 +53,6 @@ def p_statement_newline_2(p):
     p[0] = p[2]
 
 
-def p_input(p):
-    '''inputassignment : INPUT EQUALS LBRACKET numlist RBRACKET COMMA LBRACKET numlist RBRACKET'''
-    p[0] = 'INPUT', p[4], p[8]
-
-
 def p_output(p):
     '''outputassignment : OUTPUT EQUALS LBRACKET numlist RBRACKET'''
     p[0] = 'OUTPUT', p[4]
@@ -71,7 +65,9 @@ def p_statement_random_variable(p):
 
 
 def p_statement_numeric_variable(p):
-    """numeric_var_assignment : NUMERIC variable EQUALS number"""
+    """numeric_var_assignment : NUMERIC variable EQUALS number
+        | NUMERIC variable EQUALS inputindex
+    """
     p[0] = ('assignment', 'NUMERIC', p[2], p[4])
 
 

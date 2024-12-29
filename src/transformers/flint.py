@@ -1,6 +1,4 @@
-cprog = r'''
-
-#include <string.h>
+cprog = r'''#include <string.h>
 #include <stdlib.h>  // Include the standard library for atol()
 #include "flint/flint.h"
 #include "flint/arb.h"
@@ -174,12 +172,11 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
         acb_calc_integrate(inner_res, gaussian_function, &(param), lower_limit, upper_limit, goal, tol, options, prec);
         acb_mul(result, result, inner_res, prec);
     }
-    
+    /*
      if (integral.holomorphic == 0 && order == 1) {
         acb_indeterminate(result);
-     }
-
-    // Clear memory
+     } */
+    
     acb_clear(norm_factor);
     acb_clear(exponent);
     acb_clear(diff);
@@ -187,7 +184,6 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
     acb_clear(const_factor);
     acb_clear(two);
     acb_clear(pi);
-
     return 0;
 }
 
@@ -243,6 +239,9 @@ int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr ar
             arb_get_lbound_arf(l, product_eps_prob_adj, prec);
             arf_sub(diff, u, l, prec, ARF_RND_NEAR);
             arf_add(sum_delta, sum_delta, diff, prec, ARF_RND_NEAR);
+            printf("\ndelta:");
+            arf_printd(diff, prec);
+            printf("\n");
         }
         
         
@@ -275,27 +274,98 @@ int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr ar
     }
     
     if (debug) {
-        printf("\nFailed!\n");
+        printf("\Failed to prove!\n");
     }
   
     return 0;
 }
 
-void print_input(int input[], int input_adj[], int input_length) {
-    printf("in = ");
-    for (int i = 0; i < input_length; i++) {
-        printf("%d ", input[i]);
+
+int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr arb_eps, double delta, int k, slong prec, int debug) {
+    char paths_output[][100] = { {{PATHS_OUTPUT}} }; 
+    int eb[] = { {{EB}} };
+    
+    arf_t sum_delta;
+    arf_init(sum_delta);
+    arf_zero(sum_delta);
+    
+    for (int i = 0; i < probs_size; i++) {
+        arb_t arb_prob_eb, product_eps_prob_adj;
+        arb_init(arb_prob_eb);
+        arb_init(product_eps_prob_adj);
+        
+        arf_t l, u, diff;
+        arf_init(l);
+        arf_init(u);
+        arf_init(diff);
+        
+        arb_set_d(arb_prob_eb, eb[i] * calculate_error_bound(k));
+        arb_add(arb_prob_eb, probs_adj[i], arb_prob_eb, prec);
+
+        arb_exp(product_eps_prob_adj, arb_eps, prec);
+        arb_mul(product_eps_prob_adj, product_eps_prob_adj, arb_prob_eb, prec);
+        
+        if (!arb_le(probs[i], product_eps_prob_adj) && !arb_overlaps(probs[i], product_eps_prob_adj)) {
+            arb_get_ubound_arf(u, probs[i], prec);
+            arb_get_lbound_arf(l, product_eps_prob_adj, prec);
+            arf_sub(diff, u, l, prec, ARF_RND_NEAR);
+            arf_add(sum_delta, sum_delta, diff, prec, ARF_RND_NEAR);
+            printf("\ndelta:");
+            arf_printd(diff, prec);
+            printf("\n");
+        }
+        
+        
+        if (debug) {
+            printf("------Info for path %s, k = %d, prec = %ld------", paths_output[i], k, prec);
+            printf("\nProb: ");
+            arb_printd(probs[i], 3);
+            printf(" , Prob': ");
+            arb_printd(probs_adj[i], prec);
+            printf("\nexp(ε) * (Prob' + eb): ");
+            arb_printd(product_eps_prob_adj, 3);
+            printf("\n");
+        }
+
+        arb_clear(arb_prob_eb);
+        arb_clear(product_eps_prob_adj);
+        arf_clear(l);
+        arf_clear(u);
+        arf_clear(diff);
     }
 
-    printf("\tin' = ");
-    for (int i = 0; i < input_length; i++) {
-        printf("%d ", input_adj[i]);
+
+    if (arf_cmp_d(sum_delta, delta) > 0) {
+        printf("sum delta: ");
+        arf_printd(sum_delta, prec);
+        if (debug) {
+            printf("\nPassed!\n");
+        }
+        return 1;
     }
-        
-    printf("\n");
+    
+    if (debug) {
+        printf("\Failed to prove!\n");
+    }
+  
+    return 0;
 }
 
 
+char* input_to_string(int input[], int input_length) {
+    char* str_input = (char*)malloc((input_length + 1) * sizeof(char));
+   
+    for (int i = 0; i < input_length; i++) {
+        str_input[i] = input[i] ? '1' : '0';
+    }
+
+    str_input[input_length] = '\0'; 
+    return str_input;
+}
+
+void print_input(int input[], int input_adj[], int input_length) {
+    printf("\n-----------------------------------\nin = %s in' = %s\n", input_to_string(input, input_length), input_to_string(input_adj, input_length));
+}
 
 int main(int argc, char *argv[]) {
     double eps, delta;
@@ -332,6 +402,9 @@ int main(int argc, char *argv[]) {
     arb_init(arb_eps);
     arb_set_d(arb_eps, eps);
     
+    char paths_output[][100] = { {{PATHS_OUTPUT}} }; 
+    int is_dp = 1;
+    int is_not_dp = 0;
     for (int prec_index = 0; prec_index < prec_size; prec_index++) {
         arb_t probs[total_inputs][compute_probability_size];
         if (debug) {
@@ -341,10 +414,19 @@ int main(int argc, char *argv[]) {
             for (int path_index = 0; path_index < compute_probability_size; path_index++) {
                 arb_init(probs[input_index][path_index]);
                 compute_probability[path_index](probs[input_index][path_index], eps, prec[prec_index], k, inputs[input_index]);
+                
+                if (debug) {
+                    printf("\nProb path=%s, input=%s: ", paths_output[path_index], input_to_string(inputs[input_index], input_length));
+                    arb_printd(probs[input_index][path_index], 3);
+                }   
             }
         }
         
-        int is_dp = 1;
+        if (debug) {
+            printf("\n\n------------------Checking DP------------------------\n");
+        }
+        
+        is_dp = 1;
         for (int i = 0; i < total_inputs; i++) {
             for (int j = 0; j < total_inputs; j++) {
                 if (i != j) {
@@ -361,13 +443,52 @@ int main(int argc, char *argv[]) {
                 printf("-----------------------------------------------------------------------------------\n");
                 printf("Differential Private? Yes");
             } else {
-                printf("{ \"is_dp\":, %d }", is_dp);
+                printf("{ \"DP\": 1}");
             }
             
-            return 0;
+            break;
+        }
+        
+        if (debug) {
+            printf("\n\n------------------Checking Not DP------------------------\n");
+        }
+        
+        is_not_dp = 0;
+        for (int i = 0; i < total_inputs; i++) {
+            for (int j = 0; j < total_inputs; j++) {
+                if (i != j) {
+                    if (debug && is_dp) {
+                        print_input(inputs[i], inputs[j], input_length);
+                    }
+                    is_not_dp = is_not_dp || check_not_dp_for_an_pair(probs[i], probs[j], compute_probability_size, arb_eps, delta, k, prec[prec_index], debug);
+                }
+            }
+        }
+        
+        
+        if (is_not_dp) {
+            if (debug) {
+                printf("-----------------------------------------------------------------------------------\n");
+                printf("Differential Private? No");
+            } else {
+                printf("{ \"DP\": -1}");
+            }
+            break;
         }
     }
-        
+    
+    
+    
+    if (!is_not_dp && !is_dp) {
+        if (debug) {
+             printf("-----------------------------------------------------------------------------------\n");
+             printf("Differential Private? Unable to resolve");
+        } else {
+            printf("{ \"DP\": 0}");
+        }
+       
+    }
+    
     return 0;
 }
 '''
