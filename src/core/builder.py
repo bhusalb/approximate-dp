@@ -190,7 +190,7 @@ def build(program, args):
 
         expressions[str(path['output'])].append(get_integrals(graph))
 
-    return list(expressions.values()), list(expressions.keys())
+    return list(expressions.values()), list(expressions.keys()), graph
 
 def get_paths(program, args):
     path = {'variables': dict(), 'input': None, 'output': None, 'conditions': []}

@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from core.builder import build
+from core.graph import plot
 from core.our_parser import parse
 from core.clang import Clang
 from transformers import flint, mathematica
@@ -29,8 +30,9 @@ if __name__ == "__main__":
 
     program = parse(read_file(args.file), 0)
 
-    expressions, paths_output = build(program, args)
+    expressions, paths_output, graph = build(program, args)
 
+    plot(graph)
     if not args.input_size:
         print("Couldn't find input size")
         sys.exit(0)
