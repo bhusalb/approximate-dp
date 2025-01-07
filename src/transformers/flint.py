@@ -7,18 +7,22 @@ cprog = r'''#include <string.h>
 #include <math.h>
 
 typedef struct Integral {
-    acb_t var;               // Variable of integration
-    char var_name[10];          // Variable name (e.g., "X", "Y")
+    acb_t var;              
+    char var_name[10];
     acb_t mu;
     acb_t factor;
-    int has_infinity;
+    int upper_has_infinity;
+    int lower_has_infinity;
     struct Integral* inner;
-    int lower_limit_indices[100];
-    int lower_limit_size;
+    int random_lower[100];
+    int random_lower_size;
+    int numeric_lower_size;
+    float numeric_lower[100];
+    int numeric_upper_size;
+    float numeric_upper[100];
     int index;
     int holomorphic;
 } Integral;
-
 
 typedef struct Parameters {
     acb_t k;
@@ -28,24 +32,31 @@ typedef struct Parameters {
 } Parameters;
 
 
-void assign_array(int *dest, int *src, size_t size) {
+void assign_array_int(int *dest, int *src, size_t size) {
     for (size_t i = 0; i < size; i++) {
         *(dest + i) = *(src + i);
     }
 }
+
+void assign_array_float(float *dest, float *src, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        *(dest + i) = *(src + i);
+    }
+}
+
 
 int find_max(Parameters param) {
     // Initialize variables
     arb_t max_abs, temp_abs;
     arb_init(max_abs);
     arb_init(temp_abs);
-    int result_index = param.root->lower_limit_indices[0];
+    int result_index = param.root->random_lower[0];
     acb_get_real(max_abs, param.vars[result_index]); // Start with the first element as max
 
 
-    for (int i = 1; i < param.root->lower_limit_size; i++) {
+    for (int i = 1; i < param.root->random_lower_size; i++) {
         // Compute the absolute value of arr[i]
-        int index = param.root->lower_limit_indices[i];
+        int index = param.root->random_lower[i];
 
         acb_get_real(temp_abs, param.vars[index]);
 
@@ -63,7 +74,6 @@ int find_max(Parameters param) {
     return result_index;
 }
 
-
 double calculate_error_bound(float k) {
     return exp(- (pow(k, 2)) / 2);
 }
@@ -80,28 +90,60 @@ int** generate_combinations(int size) {
     return combinations;
 }
 
+
+float float_max(float nums[], int size) {
+    float max_val = nums[0];
+    for (int i = 1; i < size; i++) {
+        if (nums[i] > max_val) {
+            max_val = nums[i];
+        }
+    }
+
+    return max_val;
+}
+
 void compute_lower_limit(acb_t limit, Parameters param, slong prec) {
-    if (param.root->has_infinity == 1) {
+    if (param.root->lower_has_infinity == 1) {
         acb_t prd;
         acb_init(prd);
         acb_div(prd, param.root->factor, param.eps, prec);
         acb_mul(prd, param.k, prd, prec);
         acb_sub(limit, param.root->mu, prd, prec);
     } else {
-        if (param.root->lower_limit_size == 1) {
-            acb_set(limit, param.vars[param.root->lower_limit_indices[0]]);
+        if (param.root->random_lower_size == 1 && param.root->numeric_lower_size == 0) {
+            acb_set(limit, param.vars[param.root->random_lower[0]]);
+        } else if (param.root->random_lower_size == 0 && param.root->numeric_lower_size > 0) {
+            acb_set_d(limit, float_max(param.root->numeric_lower, param.root->numeric_lower_size));
         } else {
-            acb_set(limit, param.vars[find_max(param)]);
+            acb_t numeric_max;
+            acb_init(numeric_max);
+            acb_set_d(numeric_max, (double) float_max(param.root->numeric_lower, param.root->numeric_lower_size));
+            acb_real_max(limit, param.vars[find_max(param)], numeric_max, 1, prec);
         }
     }
 }
 
+float float_min(float nums[], int size) {
+    float min_val = nums[0];
+    for (int i = 1; i < size; i++) {
+        if (nums[i] < min_val) {
+            min_val = nums[i];
+        }
+    }
+
+    return min_val;
+}
+
 void compute_upper_limit(acb_t limit, Parameters param, slong prec) {
-    acb_t prd;
-    acb_init(prd);
-    acb_div(prd, param.root->factor, param.eps, prec);
-    acb_mul(prd, param.k, prd, prec);
-    acb_add(limit, param.root->mu, prd, prec);
+    if (param.root->upper_has_infinity == 1) {
+        acb_t prd;
+        acb_init(prd);
+        acb_div(prd, param.root->factor, param.eps, prec);
+        acb_mul(prd, param.k, prd, prec);
+        acb_add(limit, param.root->mu, prd, prec);
+    } else {
+        acb_set_d(limit, (double) float_min(param.root->numeric_upper, param.root->numeric_upper_size));
+    }
 }
 // Gaussian function for integration
 int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order, slong prec) {
@@ -189,23 +231,34 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
 
 
 
-void set_integral(Integral *integral, int index, double mu, double factor, int has_infinity, int lower_indices[], int lower_indices_size) {
+void set_integral(Integral *integral, int index, double mu, double factor,
+        int upper_has_infinity, int lower_has_infinity, int random_lower[], int random_lower_size, float numeric_lower[], int numeric_lower_size,
+        float numeric_upper[], int numeric_upper_size
+    ) {
     acb_init(integral->mu);
     acb_set_d(integral->mu, mu);
     acb_init(integral->factor);
     acb_set_d(integral->factor, factor);
-    integral->lower_limit_size = lower_indices_size;
-    if (lower_indices_size) { 
-        assign_array(integral->lower_limit_indices, lower_indices, lower_indices_size);
+    integral->random_lower_size = random_lower_size;
+    integral->numeric_lower_size = numeric_lower_size;
+    integral->numeric_upper_size = numeric_upper_size;
+
+    if (random_lower_size) {
+        assign_array_int(integral->random_lower, random_lower, random_lower_size);
     }
-    integral->has_infinity = has_infinity;
+
+    if (numeric_lower_size) {
+        assign_array_float(integral->numeric_lower, numeric_lower, numeric_lower_size);
+    }
+
+    if (numeric_upper_size) {
+        assign_array_float(integral->numeric_upper, numeric_upper, numeric_upper_size);
+    }
+
+    integral->upper_has_infinity = upper_has_infinity;
+    integral->lower_has_infinity = lower_has_infinity;
     integral->index = index;
     integral->holomorphic = 1;
-    
-    if (!has_infinity && lower_indices_size > 1) {
-        integral->holomorphic = 0;
-    }
-    
 }
 
 {{WHOLE_BLOCK}}
@@ -233,16 +286,6 @@ int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr ar
 
         arb_exp(product_eps_prob_adj, arb_eps, prec);
         arb_mul(product_eps_prob_adj, product_eps_prob_adj, probs_adj[i], prec);
-
-        if (!arb_le(arb_prob_eb, product_eps_prob_adj)) {
-            arb_get_ubound_arf(u, arb_prob_eb, prec);
-            arb_get_lbound_arf(l, product_eps_prob_adj, prec);
-            arf_sub(diff, u, l, prec, ARF_RND_NEAR);
-            arf_add(sum_delta, sum_delta, diff, prec, ARF_RND_NEAR);
-            printf("\ndelta:");
-            arf_printd(diff, prec);
-            printf("\n");
-        }
         
         
         if (debug) {
@@ -257,7 +300,21 @@ int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr ar
             arb_printd(product_eps_prob_adj, 3);
             printf("\n");
         }
+        
 
+        if (!arb_le(arb_prob_eb, product_eps_prob_adj)) {
+            arb_get_ubound_arf(u, arb_prob_eb, prec);
+            arb_get_lbound_arf(l, product_eps_prob_adj, prec);
+            arf_sub(diff, u, l, prec, ARF_RND_NEAR);
+            arf_add(sum_delta, sum_delta, diff, prec, ARF_RND_NEAR);
+            
+            if (debug) {
+                printf("\ndiff:");
+                arf_printd(diff, prec);
+                printf("\n");
+            }
+        }
+        
         arb_clear(arb_prob_eb);
         arb_clear(product_eps_prob_adj);
         arf_clear(l);
@@ -274,7 +331,7 @@ int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr ar
     }
     
     if (debug) {
-        printf("\Failed to prove!\n");
+        printf("\nFailed to prove!\n");
     }
   
     return 0;
@@ -305,16 +362,6 @@ int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb
         arb_exp(product_eps_prob_adj, arb_eps, prec);
         arb_mul(product_eps_prob_adj, product_eps_prob_adj, arb_prob_eb, prec);
         
-        if (!arb_le(probs[i], product_eps_prob_adj) && !arb_overlaps(probs[i], product_eps_prob_adj)) {
-            arb_get_ubound_arf(u, probs[i], prec);
-            arb_get_lbound_arf(l, product_eps_prob_adj, prec);
-            arf_sub(diff, u, l, prec, ARF_RND_NEAR);
-            arf_add(sum_delta, sum_delta, diff, prec, ARF_RND_NEAR);
-            printf("\ndelta:");
-            arf_printd(diff, prec);
-            printf("\n");
-        }
-        
         
         if (debug) {
             printf("------Info for path %s, k = %d, prec = %ld------", paths_output[i], k, prec);
@@ -326,6 +373,22 @@ int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb
             arb_printd(product_eps_prob_adj, 3);
             printf("\n");
         }
+        
+        if (!arb_le(probs[i], product_eps_prob_adj) && !arb_overlaps(probs[i], product_eps_prob_adj)) {
+            arb_get_ubound_arf(u, probs[i], prec);
+            arb_get_lbound_arf(l, product_eps_prob_adj, prec);
+            arf_sub(diff, u, l, prec, ARF_RND_NEAR);
+            arf_add(sum_delta, sum_delta, diff, prec, ARF_RND_NEAR);
+            
+            if (debug) {
+                printf("diff: ");
+                arf_printd(diff, prec);
+                printf("\n");
+            }
+        }
+        
+        
+        
 
         arb_clear(arb_prob_eb);
         arb_clear(product_eps_prob_adj);
@@ -336,7 +399,7 @@ int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb
 
 
     if (arf_cmp_d(sum_delta, delta) > 0) {
-        printf("sum delta: ");
+        printf("\n\nsum diff: ");
         arf_printd(sum_delta, prec);
         if (debug) {
             printf("\nPassed!\n");
@@ -345,7 +408,7 @@ int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb
     }
     
     if (debug) {
-        printf("\Failed to prove!\n");
+        printf("\nFailed to prove!\n");
     }
   
     return 0;
@@ -596,30 +659,50 @@ def get_factor_value(integral):
     return integral['var']['factor']
 
 
-def has_infinity(integral):
-    return 1 if integral['lower_limit'][1] == 'mean' else 0
+def has_infinity(limit):
+    return 1 if limit['type'] == 'infinity' else 0
 
 
-def get_lower_limit_incides(integral, variable_map):
-    if has_infinity(integral) == 0:
-        vars = integral['lower_limit'][1]
-        indices = []
-        for var in vars:
-            indices.append(str(variable_map[var]))
+def get_limits(vars, variable_map):
+    indices_random_vars = []
+    input_vars = []
+    numeric_vars = []
 
-        return '{' + ','.join(indices) + '}', len(integral['lower_limit'][1])
-    else:
-        return '{}', 0
+    for var in vars:
+        if var['type'] == 'RANDOM':
+            indices_random_vars.append(str(variable_map[var['name']]))
+
+        if var['type'] == 'NUMERIC':
+            if type(var['value']) is tuple:
+                input_vars.append(var['value'][1])
+            else:
+                numeric_vars.append(var['value'])
+
+    return indices_random_vars, numeric_vars, input_vars
 
 
 def get_integral(integral, current_index, past_index, variable_map):
+    indices_random_vars, numeric_vars, input_vars = get_limits(integral['lower_limit']['vars'], variable_map)
+    random_lower_size = len(indices_random_vars)
+    random_lower = '{' + ','.join(indices_random_vars) + '}'
+    numeric_lower_size = len(numeric_vars) + len(input_vars)
+    numeric_lower = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars))  + '}'
 
-    lower_limit_indices, lower_limit_size = get_lower_limit_incides(integral, variable_map)
 
-    template = f'''     
+    indices_random_vars, numeric_vars, input_vars = get_limits(integral['upper_limit']['vars'], variable_map)
+    numeric_upper = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars))  + '}'
+    numeric_upper_size = len(numeric_vars) + len(input_vars)
+
+    template = f'''
     Integral integral{current_index};
-    int lower_limit_indices{current_index}[] = {get_lower_limit_incides(integral, variable_map)[0]};
-    set_integral(&integral{current_index}, {variable_map[integral["var_name"]]}, {get_mean_value(integral)}, {get_factor_value(integral)}, {has_infinity(integral)}, lower_limit_indices{current_index}, {lower_limit_size});
+    int random_lower{current_index}[] = {random_lower};
+    float numeric_lower{current_index}[] = {numeric_lower};
+    float numeric_upper{current_index}[] = {numeric_upper};
+    set_integral(&integral{current_index}, {variable_map[integral["var_name"]]}, {get_mean_value(integral)}, 
+        {get_factor_value(integral)}, {has_infinity(integral['upper_limit'])}, {has_infinity(integral['lower_limit'])}, random_lower{current_index}, {random_lower_size},
+        numeric_lower{current_index}, {numeric_lower_size}, 
+        numeric_upper{current_index}, {numeric_upper_size}
+    );
     '''
     if past_index:
         template += f'''

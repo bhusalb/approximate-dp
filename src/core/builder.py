@@ -30,11 +30,12 @@ def get_value_by_index_or_var_name(info, path):
 
 def handle_assignment(statement, path):
     if statement[1] == 'NUMERIC':
-        path['variables'][statement[2][1]] = dict(type='NUMERIC', value=statement[3])
+        path['variables'][statement[2][1]] = dict(type='NUMERIC', value=statement[3], name=statement[2][1])
 
     if statement[1] == 'GAUSS':
         path['variables'][statement[2][1]] = dict(type='RANDOM', dist=statement[1], factor=statement[3][0],
-                                                  mean=get_value_by_index_or_var_name(statement[3][1], path))
+                                                  mean=get_value_by_index_or_var_name(statement[3][1], path),
+                                                  name=statement[2][1])
 
 
 def handle_if(statement, program, index, args, path, paths):
@@ -115,43 +116,22 @@ def get_k_eb_factors(paths, lower_eps):
 
     return math.ceil(k), eb
 
-
-# def get_limit(operator, var):
-#     limits = {
-#         '<': {'upper_limit': var, 'lower_limit': '-k'},
-#         '>': {'upper_limit': 'k', 'lower_limit': var}
-#     }
-#
-#     return limits[operator]
-
-
-def dfs(graph, visited, start, integrals, edge=None):
-    visited.add(start.index)
-    integral = {'var_name': start['name'], 'var': start['var'], 'upper_limit': 'k', 'lower_limit': '-k', 'inner': []}
-    if edge:
-        integral = {**integral, **get_limit(edge[start['name']][1], edge[start['name']][2])}
-
-    for edge in start.all_edges():
-        if edge.target_vertex == start:
-            target = edge.source_vertex
-        else:
-            target = edge.target_vertex
-
-        if target.index not in visited:
-            dfs(graph, visited, target, integral['inner'], edge)
-
-    integrals.append(integral)
-
-
 def upper_limit(vertex, eb):
-    return ['+', 'mean', 'k'], eb + 1
+    conditions = []
+    for edge in vertex.out_edges():
+        if edge.target_vertex['var']['type'] == 'NUMERIC':
+            conditions.append(edge.target_vertex['var'])
+
+    return ({'type': 'infinity', 'vars': []}, eb + 1) if len(conditions) == 0 else (
+        {'type': 'variables', 'vars': conditions, 'opr': 'min'}, eb)
 
 
 def lower_limit(vertex, eb):
-    condition = []
+    conditions = []
     for edge in vertex.in_edges():
-        condition.append(edge.source_vertex['name'])
-    return (['-', 'mean', 'k'], eb + 1) if len(condition) == 0 else (['max', condition], eb)
+        conditions.append(edge.source_vertex['var'])
+    return ({'type': 'infinity', 'vars': []}, eb + 1) if len(conditions) == 0 else (
+        {'type': 'variables', 'vars': conditions, 'opr': 'max'}, eb)
 
 
 def get_integrals(graph):
@@ -167,6 +147,8 @@ def get_integrals(graph):
         visited = []
         for index in ordering:
             vertex = subgraph.vs[index]
+            if vertex['var']['type'] == 'NUMERIC':
+                continue
             integral['var'] = vertex['var']
             integral['var_name'] = vertex['name']
             integral['upper_limit'], eb = upper_limit(vertex, eb)
@@ -181,6 +163,8 @@ def get_integrals(graph):
 def build(program, args):
     paths = get_paths(program, args)
 
+    graph = None
+
     expressions = defaultdict(list)
     for path in paths:
         graph = build_graph(path)
@@ -191,6 +175,7 @@ def build(program, args):
         expressions[str(path['output'])].append(get_integrals(graph))
 
     return list(expressions.values()), list(expressions.keys()), graph
+
 
 def get_paths(program, args):
     path = {'variables': dict(), 'input': None, 'output': None, 'conditions': []}

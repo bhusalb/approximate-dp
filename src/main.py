@@ -32,7 +32,6 @@ if __name__ == "__main__":
 
     expressions, paths_output, graph = build(program, args)
 
-    plot(graph)
     if not args.input_size:
         print("Couldn't find input size")
         sys.exit(0)
@@ -40,8 +39,9 @@ if __name__ == "__main__":
     flint.process(expressions, paths_output, args)
 
     if args.debug:
-        mathematica.process(expressions, paths_output, args)
-
+        # plot(graph)
+        # mathematica.process(expressions, paths_output, args)
+        pass
     clang = Clang('gcc', library_dirs=['flint'])
     clang.compile_binary('temp_program.c', 'temp_program')
     clang.output = 'temp_program'
