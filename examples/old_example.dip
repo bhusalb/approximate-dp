@@ -1,15 +1,16 @@
 INPUTSIZE 3;
-NUMERIC TH = 0;
 OUTPUT = [0];
-RANDOM X = gauss(eps/8, TH);
+RANDOM X = gauss(eps/8, 0);
 RANDOM Y = gauss(eps/2, INPUT[0]);
 RANDOM Z = gauss(eps/2, INPUT[1]);
 RANDOM W = gauss(eps/2, INPUT[2]);
 
 IF X > Y THEN {
-    IF Y < W THEN {
-        IF X < Z THEN {
-            OUTPUT[0] = 1;
+    IF Z > Y THEN {
+        IF W > X THEN {
+            IF W > Z THEN {
+                OUTPUT[0] = 1;
+            }
         }
     }
 }

@@ -116,6 +116,7 @@ def get_k_eb_factors(paths, lower_eps):
 
     return math.ceil(k), eb
 
+
 def upper_limit(vertex, eb):
     conditions = []
     for edge in vertex.out_edges():
@@ -134,6 +135,39 @@ def lower_limit(vertex, eb):
         {'type': 'variables', 'vars': conditions, 'opr': 'max'}, eb)
 
 
+def optimize(subgraph, ordering):
+    dependencies = dict()
+
+    for i in range(len(ordering)):
+        vertex = subgraph.vs[ordering[i]]
+        cur_path = []
+        for edge in vertex.in_edges():
+            cur_path += dependencies[edge.source]
+        dependencies[ordering[i]] = list(dict.fromkeys(cur_path)) + [ordering[i]]
+
+
+    root = dict()
+
+    pointer = dict()
+
+    for path in dependencies.values():
+        for_path = root
+        for vertex in path:
+
+            if vertex not in pointer:
+                for_path[vertex] = dict()
+                pointer[vertex] = for_path[vertex]
+            else:
+                for_path = pointer[vertex]
+
+            # if vertex not in for_path:
+            #     for_path[vertex] = dict()
+
+            # for_path = for_path[vertex]
+
+    return root
+
+
 def get_integrals(graph):
     # graph = graph.as_undirected()
     expression = {'opr': 'product', 'integrals': []}
@@ -142,13 +176,22 @@ def get_integrals(graph):
     eb = 0
     for subgraph in sub_graphs:
         ordering = subgraph.topological_sorting()
+        new_ordering = []
+
+        # for o_index in ordering:
+        #     vertex = subgraph.vs[o_index]
+        #     if vertex['var']['type'] == 'NUMERIC':
+        #         continue
+        #     new_ordering.append(o_index)
+
+        tree = optimize(subgraph, ordering)
         integral = dict()
         expression['integrals'].append(integral)
+
         visited = []
         for index in ordering:
             vertex = subgraph.vs[index]
-            if vertex['var']['type'] == 'NUMERIC':
-                continue
+
             integral['var'] = vertex['var']
             integral['var_name'] = vertex['name']
             integral['upper_limit'], eb = upper_limit(vertex, eb)

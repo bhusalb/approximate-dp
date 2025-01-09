@@ -374,10 +374,10 @@ int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb
             printf("\n");
         }
         
-        if (!arb_le(probs[i], product_eps_prob_adj) && !arb_overlaps(probs[i], product_eps_prob_adj)) {
-            arb_get_ubound_arf(u, probs[i], prec);
-            arb_get_lbound_arf(l, product_eps_prob_adj, prec);
-            arf_sub(diff, u, l, prec, ARF_RND_NEAR);
+        if (arb_ge(probs[i], product_eps_prob_adj) && !arb_overlaps(probs[i], product_eps_prob_adj)) {
+            arb_get_lbound_arf(l, probs[i], prec);
+            arb_get_ubound_arf(u, product_eps_prob_adj, prec);
+            arf_sub(diff, l, u, prec, ARF_RND_NEAR);
             arf_add(sum_delta, sum_delta, diff, prec, ARF_RND_NEAR);
             
             if (debug) {
