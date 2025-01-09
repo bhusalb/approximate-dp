@@ -13,7 +13,8 @@ typedef struct Integral {
     acb_t factor;
     int upper_has_infinity;
     int lower_has_infinity;
-    struct Integral* inner;
+    struct Integral* inner[100];
+    int inner_size;
     int random_lower[100];
     int random_lower_size;
     int numeric_lower_size;
@@ -191,28 +192,30 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
     acb_exp(exponent, exponent, prec);
 
     acb_mul(result, norm_factor, exponent, prec);
-    if (integral.inner != NULL) {
-        acb_t inner_res;
-        acb_init(inner_res);
-        Integral inner = *(integral.inner);
-        param.root = &inner;
-        slong goal = prec;
-
-        mag_t tol;
-        mag_init(tol);
-        mag_set_ui_2exp_si(tol, 1, -goal);
-
-        acb_calc_integrate_opt_t options;
-        acb_calc_integrate_opt_init(options);
-
-        acb_t lower_limit;
-        acb_init(lower_limit);
-        compute_lower_limit(lower_limit, param, prec);
-        acb_t upper_limit;
-        acb_init(upper_limit);
-        compute_upper_limit(upper_limit, param, prec);
-        acb_calc_integrate(inner_res, gaussian_function, &(param), lower_limit, upper_limit, goal, tol, options, prec);
-        acb_mul(result, result, inner_res, prec);
+    if (integral.inner_size) {
+        for (int i = 0; i < integral.inner_size; i++) {
+            acb_t inner_res;
+            acb_init(inner_res);
+            Integral inner = *(integral.inner[i]);
+            param.root = &inner;
+            slong goal = prec;
+    
+            mag_t tol;
+            mag_init(tol);
+            mag_set_ui_2exp_si(tol, 1, -goal);
+    
+            acb_calc_integrate_opt_t options;
+            acb_calc_integrate_opt_init(options);
+    
+            acb_t lower_limit;
+            acb_init(lower_limit);
+            compute_lower_limit(lower_limit, param, prec);
+            acb_t upper_limit;
+            acb_init(upper_limit);
+            compute_upper_limit(upper_limit, param, prec);
+            acb_calc_integrate(inner_res, gaussian_function, &(param), lower_limit, upper_limit, goal, tol, options, prec);
+            acb_mul(result, result, inner_res, prec);
+        }
     }
     /*
      if (integral.holomorphic == 0 && order == 1) {
@@ -233,7 +236,7 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
 
 void set_integral(Integral *integral, int index, double mu, double factor,
         int upper_has_infinity, int lower_has_infinity, int random_lower[], int random_lower_size, float numeric_lower[], int numeric_lower_size,
-        float numeric_upper[], int numeric_upper_size
+        float numeric_upper[], int numeric_upper_size, int inner_size
     ) {
     acb_init(integral->mu);
     acb_set_d(integral->mu, mu);
@@ -242,7 +245,8 @@ void set_integral(Integral *integral, int index, double mu, double factor,
     integral->random_lower_size = random_lower_size;
     integral->numeric_lower_size = numeric_lower_size;
     integral->numeric_upper_size = numeric_upper_size;
-
+    integral->inner_size = inner_size;
+    
     if (random_lower_size) {
         assign_array_int(integral->random_lower, random_lower, random_lower_size);
     }
@@ -580,7 +584,7 @@ int product_integrals_{{INDEX}}(acb_ptr result, double eps, slong prec, double k
 
 def function_block_template():
     return '''
-int compute_probability_path_{{INDEX}}(arb_ptr arb_result, double eps, slong prec, double k, int input[])
+int compute_probability_for_output_{{INDEX}}(arb_ptr arb_result, double eps, slong prec, double k, int input[])
 {
     acb_t result;
     acb_init(result);
@@ -629,7 +633,7 @@ int integrals_{{INDEX}}(acb_ptr result, double eps, slong prec, double d_k, int 
 
     {{BLOCK}}
     
-    parameters.root = &integral{{ROOT}};
+    parameters.root = &integral0;
     acb_t lower_limit;
     acb_init(lower_limit);
     compute_lower_limit(lower_limit, parameters, prec);
@@ -681,17 +685,20 @@ def get_limits(vars, variable_map):
     return indices_random_vars, numeric_vars, input_vars
 
 
-def get_integral(integral, current_index, past_index, variable_map):
+def get_integral(integral, current_index, variable_map):
     indices_random_vars, numeric_vars, input_vars = get_limits(integral['lower_limit']['vars'], variable_map)
     random_lower_size = len(indices_random_vars)
     random_lower = '{' + ','.join(indices_random_vars) + '}'
     numeric_lower_size = len(numeric_vars) + len(input_vars)
-    numeric_lower = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars))  + '}'
-
+    numeric_lower = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars)) + '}'
 
     indices_random_vars, numeric_vars, input_vars = get_limits(integral['upper_limit']['vars'], variable_map)
-    numeric_upper = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars))  + '}'
+    numeric_upper = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars)) + '}'
     numeric_upper_size = len(numeric_vars) + len(input_vars)
+
+    inner_size = 0
+    if 'integrals' in integral['inner']:
+        inner_size = len(integral['inner']['integrals'])
 
     template = f'''
     Integral integral{current_index};
@@ -701,20 +708,20 @@ def get_integral(integral, current_index, past_index, variable_map):
     set_integral(&integral{current_index}, {variable_map[integral["var_name"]]}, {get_mean_value(integral)}, 
         {get_factor_value(integral)}, {has_infinity(integral['upper_limit'])}, {has_infinity(integral['lower_limit'])}, random_lower{current_index}, {random_lower_size},
         numeric_lower{current_index}, {numeric_lower_size}, 
-        numeric_upper{current_index}, {numeric_upper_size}
+        numeric_upper{current_index}, {numeric_upper_size}, {inner_size}
     );
     '''
-    if past_index:
-        template += f'''
-    integral{past_index}.inner = &integral{current_index};
-        '''
+    # if past_index:
+    #     template += f'''
+    # integral{past_index}.inner = &integral{current_index};
+    #     '''
 
     return template
 
 
-def set_inner_to_null(past_index):
+def set_integrals_inner(index, i, inner_index):
     template = f'''
-    integral{past_index}.inner = NULL;
+    integral{index}.inner[{i}] = &integral{inner_index};
     '''
 
     return template
@@ -725,7 +732,54 @@ def write_to_file(file_name, program):
         f.write(program)
 
 
-def get_block_for_path(index, path):
+def traverse_integrals(variable_map, integral, index):
+    index = index + 1
+    current_index = index
+    variable_map[integral['var_name']] = index
+    integral_str = get_integral(integral, index, variable_map)
+    if integral['inner']:
+        for i, inner_integral in enumerate(integral['inner']['integrals']):
+            _integral_str, index = traverse_integrals(variable_map, inner_integral, index)
+            integral_str += _integral_str
+
+            integral_str += set_integrals_inner(
+                current_index,
+                i,
+                variable_map[inner_integral['var_name']]
+            )
+
+    return integral_str, index
+
+
+def get_block_for_integrals(index, integral):
+    variable_map = dict()
+    integral_str, _ = traverse_integrals(variable_map, integral, -1)
+    integrals_template = function_integrals_template()
+    integrals_template = integrals_template.replace('{{INDEX}}', index)
+    integrals_template = integrals_template.replace('{{BLOCK}}', integral_str)
+
+    return integrals_template
+
+
+def get_block_for_path(path, path_prefix):
+    eb = path['eb']
+    products = []
+    block = ''
+    for index, integral in enumerate(path['integrals']):
+        integral_index = path_prefix + '_' + str(index)
+        block_integral = get_block_for_integrals(integral_index, integral)
+
+        block += block_integral
+        products.append('integrals_' + str(integral_index))
+
+    product_block = function_product_block_template()
+    product_block = product_block.replace('{{ARRAY}}', ', '.join(products))
+    product_block = product_block.replace('{{INDEX}}', path_prefix)
+
+    return block + product_block, eb
+
+
+def get_block_for_output(index, possible_paths, output_str):
     func_block = function_block_template()
 
     block = ''
@@ -733,40 +787,11 @@ def get_block_for_path(index, path):
     eb = 0
 
     sum_integrals = []
-    for i, cur_integrals in enumerate(path):
-        add_index = str(index) + '_' + str(i)
-
-        eb += cur_integrals['eb']
-
-        products = []
-        for j, cur_integral in enumerate(cur_integrals['integrals']):
-            variable_map = dict()
-            product_index = str(index) + '_' + str(i) + '_' + str(j)
-            past_index = None
-            k = 0
-            integral_str = ''
-            while cur_integral:
-                variable_map[cur_integral['var_name']] = k
-                current_index = str(k)
-                integral_str += get_integral(cur_integral, current_index, past_index, variable_map)
-                k += 1
-                cur_integral = cur_integral['inner']
-                past_index = current_index
-
-            integral_str += set_inner_to_null(past_index)
-            integrals_template = function_integrals_template()
-            integrals_template = integrals_template.replace('{{ROOT}}', '0')
-            integrals_template = integrals_template.replace('{{INDEX}}', str(product_index))
-            integrals_template = integrals_template.replace('{{BLOCK}}', integral_str)
-
-            block += integrals_template
-            products.append('integrals_' + str(product_index))
-
-        product_block = function_product_block_template()
-        product_block = product_block.replace('{{ARRAY}}', ', '.join(products))
-        product_block = product_block.replace('{{INDEX}}', add_index)
+    for i, path in enumerate(possible_paths):
+        index_prefix = str(index) + '_' + str(i)
+        product_block, eb = get_block_for_path(path, index_prefix)
         block += product_block
-        sum_integrals.append('product_integrals_' + add_index)
+        sum_integrals.append('product_integrals_' + index_prefix)
 
     func_block = func_block.replace('{{ARRAY}}', ', '.join(sum_integrals))
 
@@ -776,14 +801,14 @@ def get_block_for_path(index, path):
     return block, eb
 
 
-def process(paths, paths_output, args):
+def process(outputs, paths_output, args):
     whole_block = ''
     probability_array = []
     eb_array = []
-    for index, path in enumerate(paths):
-        block, eb = get_block_for_path(index, path)
+    for index, possible_paths in enumerate(outputs):
+        block, eb = get_block_for_output(index, possible_paths, paths_output[index])
         whole_block += block
-        probability_array.append(f'compute_probability_path_{index}')
+        probability_array.append(f'compute_probability_for_output_{index}')
         eb_array.append(str(eb))
 
     out = cprog.replace('{{WHOLE_BLOCK}}', whole_block)

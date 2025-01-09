@@ -142,9 +142,10 @@ def optimize(subgraph, ordering):
         vertex = subgraph.vs[ordering[i]]
         cur_path = []
         for edge in vertex.in_edges():
+            if edge.source_vertex['var']['type'] == 'NUMERIC':
+                continue
             cur_path += dependencies[edge.source]
         dependencies[ordering[i]] = list(dict.fromkeys(cur_path)) + [ordering[i]]
-
 
     root = dict()
 
@@ -153,7 +154,6 @@ def optimize(subgraph, ordering):
     for path in dependencies.values():
         for_path = root
         for vertex in path:
-
             if vertex not in pointer:
                 for_path[vertex] = dict()
                 pointer[vertex] = for_path[vertex]
@@ -168,38 +168,57 @@ def optimize(subgraph, ordering):
     return root
 
 
+def traverse(subgraph, tree, integrals):
+    for vertex_index in tree:
+        vertex = subgraph.vs[vertex_index]
+        integral = dict()
+        integral['var'] = vertex['var']
+        integral['var_name'] = vertex['name']
+        integral['upper_limit'], eb1 = upper_limit(vertex, 0)
+        integral['lower_limit'], eb2 = lower_limit(vertex, 0)
+        integral['inner'] = dict()
+        inner_tree = tree[vertex_index]
+        eb = eb1 + eb2
+        if inner_tree:
+            integral['inner'] = {
+                'opr': 'product',
+                'integrals': []
+            }
+            eb += traverse(subgraph, inner_tree, integral['inner']['integrals'])
+        integrals.append(integral)
+
+    return eb
 def get_integrals(graph):
     # graph = graph.as_undirected()
     expression = {'opr': 'product', 'integrals': []}
-
     sub_graphs = graph.connected_components(mode='weak').subgraphs()
-    eb = 0
     for subgraph in sub_graphs:
         ordering = subgraph.topological_sorting()
         new_ordering = []
 
-        # for o_index in ordering:
-        #     vertex = subgraph.vs[o_index]
-        #     if vertex['var']['type'] == 'NUMERIC':
-        #         continue
-        #     new_ordering.append(o_index)
+        for o_index in ordering:
+            vertex = subgraph.vs[o_index]
+            if vertex['var']['type'] == 'NUMERIC':
+                continue
+            new_ordering.append(o_index)
 
-        tree = optimize(subgraph, ordering)
-        integral = dict()
-        expression['integrals'].append(integral)
+        tree = optimize(subgraph, new_ordering)
 
-        visited = []
-        for index in ordering:
-            vertex = subgraph.vs[index]
+        expression['eb'] = traverse(subgraph, tree, expression['integrals'])
 
-            integral['var'] = vertex['var']
-            integral['var_name'] = vertex['name']
-            integral['upper_limit'], eb = upper_limit(vertex, eb)
-            integral['lower_limit'], eb = lower_limit(vertex, eb)
-            integral['inner'] = dict()
-            integral = integral['inner']
-            visited.append(index)
-    expression['eb'] = eb
+        # expression['integrals'].append(integral)
+        #
+        # visited = []
+        # for index in ordering:
+        #     vertex = subgraph.vs[index]
+        #
+        #     integral['var'] = vertex['var']
+        #     integral['var_name'] = vertex['name']
+        #     integral['upper_limit'], eb = upper_limit(vertex, eb)
+        #     integral['lower_limit'], eb = lower_limit(vertex, eb)
+        #     integral['inner'] = dict()
+        #     integral = integral['inner']
+        #     visited.append(index)
     return expression
 
 
