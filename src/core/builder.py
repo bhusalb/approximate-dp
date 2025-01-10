@@ -1,6 +1,7 @@
 import copy
 import math
 from collections import defaultdict
+from collections import deque
 
 from .graph import build_graph
 from .integral_bound import calculate_bounds
@@ -135,6 +136,34 @@ def lower_limit(vertex, eb):
         {'type': 'variables', 'vars': conditions, 'opr': 'max'}, eb)
 
 
+def topological_sort(graph):
+    """
+    Perform a topological sort on a directed acyclic graph (DAG) manually.
+
+    :param graph: An igraph Graph object that is a directed acyclic graph (DAG).
+    :return: A list of vertices in topologically sorted order.
+    """
+    # Step 1: Compute in-degrees of all vertices
+    in_degrees = graph.degree(mode="IN")
+
+    # Step 2: Initialize a queue with vertices of in-degree 0
+    zero_in_degree = deque([v for v, deg in enumerate(in_degrees) if deg == 0])
+
+    # Step 3: Perform Kahn's Algorithm
+    sorted_order = []
+    while zero_in_degree:
+        current = zero_in_degree.popleft()
+        sorted_order.append(current)
+
+        # Reduce the in-degree of neighbors
+        for neighbor in graph.neighbors(current, mode="OUT"):
+            in_degrees[neighbor] -= 1
+            if in_degrees[neighbor] == 0:
+                zero_in_degree.append(neighbor)
+
+    return sorted_order
+
+
 def optimize(subgraph, ordering):
     dependencies = dict()
 
@@ -188,12 +217,14 @@ def traverse(subgraph, tree, integrals):
             eb += traverse(subgraph, inner_tree, integral['inner']['integrals'])
         integrals.append(integral)
     return eb
+
+
 def get_integrals(graph):
     # graph = graph.as_undirected()
     expression = {'opr': 'product', 'integrals': []}
     sub_graphs = graph.connected_components(mode='weak').subgraphs()
     for subgraph in sub_graphs:
-        ordering = subgraph.topological_sorting()
+        ordering = topological_sort(subgraph)
         new_ordering = []
 
         for o_index in ordering:

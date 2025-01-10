@@ -20,6 +20,7 @@ def get_args():
     parser.add_argument('--eps', '-e', type=float, required=True)
     parser.add_argument('--delta', '-d', type=float, required=False)
     parser.add_argument('--k', '-k', type=int, required=False, default=4)
+    parser.add_argument('--input', '-i', type=str, required=False, default=None)
     parser.add_argument('--debug', '-dd', action='store_true', required=False, default=False)
 
     return parser.parse_args()
@@ -29,6 +30,10 @@ if __name__ == "__main__":
     args = get_args()
 
     program = parse(read_file(args.file), 0)
+
+    if args.input:
+        args.input = read_file(args.input)
+
 
     expressions, paths_output, graph = build(program, args)
 

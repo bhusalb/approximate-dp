@@ -1,3 +1,5 @@
+import json
+
 cprog = r'''#include <string.h>
 #include <stdlib.h>  // Include the standard library for atol()
 #include "flint/flint.h"
@@ -5,6 +7,7 @@ cprog = r'''#include <string.h>
 #include "flint/acb.h"
 #include "flint/acb_calc.h"
 #include <math.h>
+#include <string.h>
 
 typedef struct Integral {
     acb_t var;              
@@ -423,7 +426,9 @@ char* input_to_string(int input[], int input_length) {
     char* str_input = (char*)malloc((input_length + 1) * sizeof(char));
    
     for (int i = 0; i < input_length; i++) {
-        str_input[i] = input[i] ? '1' : '0';
+        char tmp[3];
+        sprintf(tmp, "%d", input[i]);
+        strcat(str_input, tmp);
     }
 
     str_input[input_length] = '\0'; 
@@ -456,8 +461,7 @@ int main(int argc, char *argv[]) {
         printf("k=%d, eps=%f, delta=%f, input_length=%d\n\n", k, eps, delta, input_length);
     }
     
-    int total_inputs = (int) pow(2, input_length);
-    int** inputs = generate_combinations(input_length);
+    {{INPUTS}}
     
     slong prec[] = { 8, 16, 32 };
     int prec_size = sizeof(prec) / sizeof(prec[0]);
@@ -494,15 +498,11 @@ int main(int argc, char *argv[]) {
         }
         
         is_dp = 1;
-        for (int i = 0; i < total_inputs; i++) {
-            for (int j = 0; j < total_inputs; j++) {
-                if (i != j) {
-                    if (debug && is_dp) {
-                        print_input(inputs[i], inputs[j], input_length);
-                    }
-                    is_dp = is_dp && check_for_an_pair(probs[i], probs[j], compute_probability_size, arb_eps, delta, k, prec[prec_index], debug);
-                }
+        for (int i = 0; i < total_pairs; i++) {
+            if (debug && is_dp) {
+                print_input(inputs[input_pairs[i][0]], inputs[input_pairs[i][1]], input_length);
             }
+            is_dp = is_dp && check_for_an_pair(probs[input_pairs[i][0]], probs[input_pairs[i][1]], compute_probability_size, arb_eps, delta, k, prec[prec_index], debug);
         }
         
         if (is_dp) {
@@ -521,15 +521,8 @@ int main(int argc, char *argv[]) {
         }
         
         is_not_dp = 0;
-        for (int i = 0; i < total_inputs; i++) {
-            for (int j = 0; j < total_inputs; j++) {
-                if (i != j) {
-                    if (debug && is_dp) {
-                        print_input(inputs[i], inputs[j], input_length);
-                    }
-                    is_not_dp = is_not_dp || check_not_dp_for_an_pair(probs[i], probs[j], compute_probability_size, arb_eps, delta, k, prec[prec_index], debug);
-                }
-            }
+        for (int i = 0; i < total_pairs; i++) {
+            is_not_dp = is_not_dp || check_not_dp_for_an_pair(probs[input_pairs[i][0]], probs[input_pairs[i][1]], compute_probability_size, arb_eps, delta, k, prec[prec_index], debug);
         }
         
         
@@ -801,6 +794,75 @@ def get_block_for_output(index, possible_paths, output_str):
     return block, eb
 
 
+def default_input_generation():
+    default_code = '''
+    
+    int total_inputs = (int) pow(2, input_length);
+    int** inputs = generate_combinations(input_length);
+    int input_pairs[1000][2];
+    int total_pairs = 0;
+    for (int i = 0; i < total_inputs; i++) {
+        for (int j = 0; j < total_inputs; j++) {
+            if (i != j) {
+                input_pairs[total_pairs][0] = i;
+                input_pairs[total_pairs][1] = j;
+                total_pairs++;
+            }
+        }
+    }
+    
+    '''
+
+    return default_code
+
+
+def list_to_string_input(input):
+    return '{' + ','.join(map(str, input)) + '}'
+
+
+def prepare_input_code_from_list(input_list):
+    inputs = set()
+    for input_pair in input_list:
+        inputs.add(tuple(input_pair[0]))
+        inputs.add(tuple(input_pair[1]))
+
+    inputs = list(inputs)
+    inputs_map = dict()
+    for i, input in enumerate(inputs):
+        inputs_map[input] = i
+
+    new_input_pairs = []
+    for input_pair in input_list:
+        new_input_pairs.append(
+            [
+                inputs_map[tuple(input_pair[0])],
+                inputs_map[tuple(input_pair[1])],
+            ]
+        )
+
+    inputs_str = '{' + ','.join(map(list_to_string_input, inputs)) + '}'
+    input_pairs_str = '{' + ','.join(map(list_to_string_input, new_input_pairs)) + '}'
+    input_size = len(inputs[0])
+
+    return f'''
+    int total_inputs = {len(inputs)};
+    int inputs[{len(inputs)}][{input_size}] = {inputs_str};
+    int input_pairs[{len(new_input_pairs)}][2] = {input_pairs_str};
+    int total_pairs = {len(new_input_pairs)};
+    '''
+
+
+def input_generation(args):
+    if args.input:
+        try:
+            input_list = json.loads(args.input)
+            return prepare_input_code_from_list(input_list)
+        except ValueError:
+            raise Exception("Couldn't parse json input.")
+
+    return default_input_generation()
+
+
 def process(outputs, paths_output, args):
     whole_block = ''
     probability_array = []
@@ -816,5 +878,6 @@ def process(outputs, paths_output, args):
     out = out.replace('{{PATHS_OUTPUT}}', ','.join(list(map(lambda x: '"' + x + '"', paths_output))))
     out = out.replace('{{EB}}', ', '.join(eb_array))
     out = out.replace('{{INPUT_SIZE}}', str(args.input_size))
+    out = out.replace('{{INPUTS}}', input_generation(args))
 
     write_to_file('temp_program.c', out)
