@@ -136,71 +136,36 @@ def lower_limit(vertex, eb):
         {'type': 'variables', 'vars': conditions, 'opr': 'max'}, eb)
 
 
-def topological_sort(graph):
-    """
-    Perform a topological sort on a directed acyclic graph (DAG) manually.
-
-    :param graph: An igraph Graph object that is a directed acyclic graph (DAG).
-    :return: A list of vertices in topologically sorted order.
-    """
-    # Step 1: Compute in-degrees of all vertices
-    in_degrees = graph.degree(mode="IN")
-
-    # Step 2: Initialize a queue with vertices of in-degree 0
+def optimize(graph):
+    in_degrees = graph.degree(mode="in")
+    out_degrees = graph.degree(mode="out")
     zero_in_degree = deque([v for v, deg in enumerate(in_degrees) if deg == 0])
-
-    # Step 3: Perform Kahn's Algorithm
     sorted_order = []
+
+    root = dict()
+    tree = root
+
     while zero_in_degree:
         current = zero_in_degree.popleft()
-        sorted_order.append(current)
 
-        # Reduce the in-degree of neighbors
-        for neighbor in graph.neighbors(current, mode="OUT"):
+        tree[current] = dict()
+
+        if out_degrees[current] != 0:
+            tree = tree[current]
+
+        for neighbor in graph.neighbors(current, mode="out"):
             in_degrees[neighbor] -= 1
             if in_degrees[neighbor] == 0:
                 zero_in_degree.append(neighbor)
 
-    return sorted_order
-
-
-def optimize(subgraph, ordering):
-    dependencies = dict()
-
-    for i in range(len(ordering)):
-        vertex = subgraph.vs[ordering[i]]
-        cur_path = []
-        for edge in vertex.in_edges():
-            if edge.source_vertex['var']['type'] == 'NUMERIC':
-                continue
-            cur_path += dependencies[edge.source]
-        dependencies[ordering[i]] = list(dict.fromkeys(cur_path)) + [ordering[i]]
-
-    root = dict()
-
-    pointer = dict()
-
-    for path in dependencies.values():
-        for_path = root
-        for vertex in path:
-            if vertex not in pointer:
-                for_path[vertex] = dict()
-                pointer[vertex] = for_path[vertex]
-            else:
-                for_path = pointer[vertex]
-
-            # if vertex not in for_path:
-            #     for_path[vertex] = dict()
-
-            # for_path = for_path[vertex]
-
     return root
-
 
 def traverse(subgraph, tree, integrals):
     eb = 0
     for vertex_index in tree:
         vertex = subgraph.vs[vertex_index]
+        if vertex['var']['type'] == 'NUMERIC':
+            continue
         integral = dict()
         integral['var'] = vertex['var']
         integral['var_name'] = vertex['name']
@@ -224,32 +189,8 @@ def get_integrals(graph):
     expression = {'opr': 'product', 'integrals': []}
     sub_graphs = graph.connected_components(mode='weak').subgraphs()
     for subgraph in sub_graphs:
-        ordering = topological_sort(subgraph)
-        new_ordering = []
-
-        for o_index in ordering:
-            vertex = subgraph.vs[o_index]
-            if vertex['var']['type'] == 'NUMERIC':
-                continue
-            new_ordering.append(o_index)
-
-        tree = optimize(subgraph, new_ordering)
-
+        tree = optimize(subgraph)
         expression['eb'] = traverse(subgraph, tree, expression['integrals'])
-
-        # expression['integrals'].append(integral)
-        #
-        # visited = []
-        # for index in ordering:
-        #     vertex = subgraph.vs[index]
-        #
-        #     integral['var'] = vertex['var']
-        #     integral['var_name'] = vertex['name']
-        #     integral['upper_limit'], eb = upper_limit(vertex, eb)
-        #     integral['lower_limit'], eb = lower_limit(vertex, eb)
-        #     integral['inner'] = dict()
-        #     integral = integral['inner']
-        #     visited.append(index)
     return expression
 
 

@@ -525,7 +525,6 @@ int main(int argc, char *argv[]) {
             is_not_dp = is_not_dp || check_not_dp_for_an_pair(probs[input_pairs[i][0]], probs[input_pairs[i][1]], compute_probability_size, arb_eps, delta, k, prec[prec_index], debug);
         }
         
-        
         if (is_not_dp) {
             if (debug) {
                 printf("-----------------------------------------------------------------------------------\n");
