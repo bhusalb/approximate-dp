@@ -169,6 +169,7 @@ def optimize(subgraph, ordering):
 
 
 def traverse(subgraph, tree, integrals):
+    eb = 0
     for vertex_index in tree:
         vertex = subgraph.vs[vertex_index]
         integral = dict()
@@ -186,7 +187,6 @@ def traverse(subgraph, tree, integrals):
             }
             eb += traverse(subgraph, inner_tree, integral['inner']['integrals'])
         integrals.append(integral)
-
     return eb
 def get_integrals(graph):
     # graph = graph.as_undirected()
