@@ -140,19 +140,15 @@ def optimize(graph):
     in_degrees = graph.degree(mode="in")
     out_degrees = graph.degree(mode="out")
     zero_in_degree = deque([v for v, deg in enumerate(in_degrees) if deg == 0])
-    sorted_order = []
 
     root = dict()
     tree = root
 
     while zero_in_degree:
         current = zero_in_degree.popleft()
-
         tree[current] = dict()
-
         if out_degrees[current] != 0:
             tree = tree[current]
-
         for neighbor in graph.neighbors(current, mode="out"):
             in_degrees[neighbor] -= 1
             if in_degrees[neighbor] == 0:

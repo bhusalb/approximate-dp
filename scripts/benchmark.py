@@ -41,7 +41,7 @@ parser = argparse.ArgumentParser(description='Benchmarking tool')
 
 root_dir = os.path.join(os.path.dirname(__file__), '../')
 
-examples_dir = os.path.join(root_dir, 'examples')
+examples_dir = os.path.join(root_dir, 'examples', 'svt')
 
 examples = os.listdir(examples_dir)
 
@@ -52,8 +52,8 @@ args = parser.parse_args()
 
 benchmark_time_template = '''python {main} -f {file_path} -e {eps} -d {delta}'''
 
-eps = 0.5
-delta = 0.0000001
+eps = 0.2
+delta = 0.01
 
 for example in examples:
     output = dict()
@@ -74,7 +74,7 @@ for example in examples:
 
     rows.append(output)
 
-# rows.sort(key=lambda a: a['test'], reverse=False)
+rows.sort(key=lambda a: a['test'], reverse=False)
 
 with open(f'result.csv', 'w', newline='') as outfile:
     writer = csv.DictWriter(outfile, rows[0].keys())
