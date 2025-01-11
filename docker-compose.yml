@@ -3,3 +3,4 @@ services:
     build: .
     volumes:
       - .:/home/ubuntu/approx-dp
+    command: /bin/bash
