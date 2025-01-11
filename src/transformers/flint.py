@@ -1,4 +1,5 @@
 import json
+import math
 
 cprog = r'''#include <string.h>
 #include <stdlib.h>  // Include the standard library for atol()
@@ -793,12 +794,14 @@ def get_block_for_output(index, possible_paths, output_str):
     return block, eb
 
 
-def default_input_generation():
+def default_input_generation(args):
+    input_pairs_size = str(int(math.pow(2, args.input_size * 2)))
+
     default_code = '''
     
     int total_inputs = (int) pow(2, input_length);
     int** inputs = generate_combinations(input_length);
-    int input_pairs[1000][2];
+    int input_pairs[{{SIZE}}][2];
     int total_pairs = 0;
     for (int i = 0; i < total_inputs; i++) {
         for (int j = 0; j < total_inputs; j++) {
@@ -811,7 +814,7 @@ def default_input_generation():
     }
     
     '''
-
+    default_code = default_code.replace('{{SIZE}}', input_pairs_size)
     return default_code
 
 
@@ -819,7 +822,7 @@ def list_to_string_input(input):
     return '{' + ','.join(map(str, input)) + '}'
 
 
-def prepare_input_code_from_list(input_list):
+def prepare_input_code_from_list(input_list, args):
     inputs = set()
     for input_pair in input_list:
         inputs.add(tuple(input_pair[0]))
@@ -841,7 +844,7 @@ def prepare_input_code_from_list(input_list):
 
     inputs_str = '{' + ','.join(map(list_to_string_input, inputs)) + '}'
     input_pairs_str = '{' + ','.join(map(list_to_string_input, new_input_pairs)) + '}'
-    input_size = len(inputs[0])
+    input_size = args.input_size
 
     return f'''
     int total_inputs = {len(inputs)};
@@ -855,11 +858,11 @@ def input_generation(args):
     if args.input:
         try:
             input_list = json.loads(args.input)
-            return prepare_input_code_from_list(input_list)
+            return prepare_input_code_from_list(input_list, args)
         except ValueError:
             raise Exception("Couldn't parse json input.")
 
-    return default_input_generation()
+    return default_input_generation(args)
 
 
 def process(outputs, paths_output, args):

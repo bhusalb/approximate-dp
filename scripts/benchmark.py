@@ -52,7 +52,7 @@ args = parser.parse_args()
 
 benchmark_time_template = '''python {main} -f {file_path} -e {eps} -d {delta}'''
 
-eps = 0.2
+eps = 0.5
 delta = 0.01
 
 for example in examples:
@@ -76,7 +76,7 @@ for example in examples:
 
 rows.sort(key=lambda a: a['test'], reverse=False)
 
-with open(f'result.csv', 'w', newline='') as outfile:
+with open(f'{root_dir}/results/result.csv', 'w', newline='') as outfile:
     writer = csv.DictWriter(outfile, rows[0].keys())
     writer.writeheader()
     writer.writerows(rows)
