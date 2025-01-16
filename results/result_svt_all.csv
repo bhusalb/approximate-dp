@@ -1,0 +1,10 @@
+test,time,output
+example_8.dip,TIMEOUT,N/A
+example_9.dip,TIMEOUT,N/A
+example_4.dip,97.78022654851277,"{ ""DP"": 1}"
+example_5.dip,TIMEOUT,N/A
+example_7.dip,TIMEOUT,N/A
+example_6.dip,TIMEOUT,N/A
+example_2.dip,4.610243558883667,"{ ""DP"": 1}"
+example_3.dip,32.034292459487915,"{ ""DP"": 1}"
+example_1.dip,1.4228164354960124,"{ ""DP"": 1}"

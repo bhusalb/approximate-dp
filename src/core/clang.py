@@ -23,7 +23,7 @@ class Clang:
     def _compile(self, source, output, include_dirs=(), library_dirs=(), extra_args=()):
         include_args = ('-I{}'.format(include) for include in (self._include_dirs + list(include_dirs)))
         library_args = ('-l{}'.format(library) for library in (self._library_dirs + list(library_dirs)))
-        command = (self._binary, *include_args, *library_args, *extra_args, '-o', output, source)
+        command = (self._binary, '-o', output, source, *include_args, *library_args, *extra_args)
         process = subprocess.run(command, capture_output=True)
         for output in (process.stdout.decode(), process.stderr.decode()):
             if 'error' in output or 'ERROR' in output:
@@ -66,15 +66,13 @@ class Clang:
         print("Command to run:", ' '.join(command))
         os.system(' '.join(command))
 
-
     def run(self, args):
         include_args = ('-{} {}'.format(key, value) for key, value in args.items())
         # command = ['./' + self.output] + list(include_args)  # Ensure it is a list
         command = [os.path.join(os.getcwd(), self.output)] + list(include_args)
         command = shlex.split(' '.join(command))
 
-        process =  subprocess.run(
-                command,
-                check=True
+        process = subprocess.run(
+            command,
+            check=True
         )
-
