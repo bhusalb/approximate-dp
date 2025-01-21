@@ -19,12 +19,17 @@ typedef struct Integral {
     int lower_has_infinity;
     struct Integral* inner[100];
     int inner_size;
+    
     int random_lower[100];
     int random_lower_size;
     int numeric_lower_size;
     float numeric_lower[100];
+    
+    int random_upper[100];
+    int random_upper_size;
     int numeric_upper_size;
     float numeric_upper[100];
+    
     int index;
     int holomorphic;
 } Integral;
@@ -79,6 +84,36 @@ int find_max(Parameters param) {
     return result_index;
 }
 
+int find_min(Parameters param) {
+    // Initialize variables
+    arb_t min_abs, temp_abs;
+    arb_init(min_abs);
+    arb_init(temp_abs);
+    int result_index = param.root->random_upper[0];
+    acb_get_real(min_abs, param.vars[result_index]); // Start with the first element as max
+
+
+    for (int i = 1; i < param.root->random_upper_size; i++) {
+        // Compute the absolute value of arr[i]
+        int index = param.root->random_upper[i];
+
+        acb_get_real(temp_abs, param.vars[index]);
+
+        // Compare and update max if necessary
+        if (arb_lt(temp_abs, min_abs)) {
+            arb_set(min_abs, temp_abs); // Update max magnitude
+            result_index = index;
+        }
+    }
+
+    // Cleanup
+    arb_clear(min_abs);
+    arb_clear(temp_abs);
+
+    return result_index;
+}
+
+
 double calculate_error_bound(float k) {
     return exp(- (pow(k, 2)) / 2);
 }
@@ -118,12 +153,16 @@ void compute_lower_limit(acb_t limit, Parameters param, slong prec) {
         if (param.root->random_lower_size == 1 && param.root->numeric_lower_size == 0) {
             acb_set(limit, param.vars[param.root->random_lower[0]]);
         } else if (param.root->random_lower_size == 0 && param.root->numeric_lower_size > 0) {
-            acb_set_d(limit, float_max(param.root->numeric_lower, param.root->numeric_lower_size));
+            acb_set_d(limit, (double) float_max(param.root->numeric_lower, param.root->numeric_lower_size));
         } else {
-            acb_t numeric_max;
-            acb_init(numeric_max);
-            acb_set_d(numeric_max, (double) float_max(param.root->numeric_lower, param.root->numeric_lower_size));
-            acb_real_max(limit, param.vars[find_max(param)], numeric_max, 1, prec);
+            if (param.root->numeric_lower_size) {
+                acb_t numeric_max;
+                acb_init(numeric_max);
+                acb_set_d(numeric_max, (double) float_max(param.root->numeric_lower, param.root->numeric_lower_size));
+                acb_real_max(limit, param.vars[find_max(param)], numeric_max, 1, prec);
+            } else {
+                acb_set(limit, param.vars[find_max(param)]);
+            }
         }
     }
 }
@@ -147,7 +186,20 @@ void compute_upper_limit(acb_t limit, Parameters param, slong prec) {
         acb_mul(prd, param.k, prd, prec);
         acb_add(limit, param.root->mu, prd, prec);
     } else {
-        acb_set_d(limit, (double) float_min(param.root->numeric_upper, param.root->numeric_upper_size));
+        if (param.root->random_upper_size == 1 && param.root->numeric_upper_size == 0) {
+            acb_set(limit, param.vars[param.root->random_upper[0]]);
+        } else if (param.root->random_upper_size == 0 && param.root->numeric_upper_size > 0) {
+            acb_set_d(limit, (double) float_min(param.root->numeric_upper, param.root->numeric_upper_size));
+        } else {
+            if (param.root->numeric_upper_size) {
+                acb_t numeric_min;
+                acb_init(numeric_min);
+                acb_set_d(numeric_min, (double) float_min(param.root->numeric_upper, param.root->numeric_upper_size));
+                acb_real_min(limit, param.vars[find_min(param)], numeric_min, 1, prec);
+            } else {
+                acb_set(limit, param.vars[find_min(param)]);
+            }
+        }
     }
 }
 // Gaussian function for integration
@@ -158,7 +210,7 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
     
     if (order > 1)
 		flint_abort();
-    
+		
     acb_init(param.vars[integral.index]);
     acb_set(param.vars[integral.index], x);
 
@@ -239,7 +291,9 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
 
 
 void set_integral(Integral *integral, int index, double mu, double factor,
-        int upper_has_infinity, int lower_has_infinity, int random_lower[], int random_lower_size, float numeric_lower[], int numeric_lower_size,
+        int upper_has_infinity, int lower_has_infinity, int random_lower[], int random_lower_size, 
+        int random_upper[], int random_upper_size,
+        float numeric_lower[], int numeric_lower_size,
         float numeric_upper[], int numeric_upper_size, int inner_size
     ) {
     acb_init(integral->mu);
@@ -247,12 +301,18 @@ void set_integral(Integral *integral, int index, double mu, double factor,
     acb_init(integral->factor);
     acb_set_d(integral->factor, factor);
     integral->random_lower_size = random_lower_size;
+    integral->random_upper_size = random_upper_size;
+
     integral->numeric_lower_size = numeric_lower_size;
     integral->numeric_upper_size = numeric_upper_size;
     integral->inner_size = inner_size;
     
     if (random_lower_size) {
         assign_array_int(integral->random_lower, random_lower, random_lower_size);
+    }
+    
+    if (random_upper_size) {
+        assign_array_int(integral->random_upper, random_upper, random_upper_size);
     }
 
     if (numeric_lower_size) {
@@ -686,6 +746,8 @@ def get_integral(integral, current_index, variable_map):
     numeric_lower = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars)) + '}'
 
     indices_random_vars, numeric_vars, input_vars = get_limits(integral['upper_limit']['vars'], variable_map)
+    random_upper_size = len(indices_random_vars)
+    random_upper = '{' + ','.join(indices_random_vars) + '}'
     numeric_upper = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars)) + '}'
     numeric_upper_size = len(numeric_vars) + len(input_vars)
 
@@ -697,9 +759,12 @@ def get_integral(integral, current_index, variable_map):
     Integral integral{current_index};
     int random_lower{current_index}[] = {random_lower};
     float numeric_lower{current_index}[] = {numeric_lower};
+    
+    int random_upper{current_index}[] = {random_upper};
     float numeric_upper{current_index}[] = {numeric_upper};
     set_integral(&integral{current_index}, {variable_map[integral["var_name"]]}, {get_mean_value(integral)}, 
         {get_factor_value(integral)}, {has_infinity(integral['upper_limit'])}, {has_infinity(integral['lower_limit'])}, random_lower{current_index}, {random_lower_size},
+        random_upper{current_index}, {random_upper_size},
         numeric_lower{current_index}, {numeric_lower_size}, 
         numeric_upper{current_index}, {numeric_upper_size}, {inner_size}
     );

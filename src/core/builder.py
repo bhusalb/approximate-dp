@@ -118,45 +118,55 @@ def get_k_eb_factors(paths, lower_eps):
     return math.ceil(k), eb
 
 
-def upper_limit(vertex, eb):
+def gen_expr(G, tree, var_map, transpose):
+    # Check if the graph has multiple weakly connected components
+    components = G.decompose(mode="weak")
+    if len(components) > 1:
+        return max([gen_expr(comp, tree, var_map, transpose) for comp in components])
+
+        # If the graph is a single node
+    if len(G.vs) == 1:
+        v = G.vs[0]['name']
+        tree[var_map[v]] = dict()
+        return 1
+
+        # If the graph has multiple nodes
+    source_nodes = [v.index for v in G.vs if G.degree(v.index, mode="out" if transpose else "in") == 0]
+    source_names = [G.vs[idx]['name'] for idx in source_nodes]
+    G_prime = G.copy()
+    G_prime.delete_vertices(source_nodes)
+    depth = 0
+    for source in source_names:
+        v = var_map[source]
+        tree[v] = dict()
+        tree = tree[v]
+        depth += 1
+
+    depth += gen_expr(G_prime, tree, var_map, transpose)
+
+    return depth
+
+
+def upper_limit(vertex, eb, transpose):
     conditions = []
     for edge in vertex.out_edges():
-        if edge.target_vertex['var']['type'] == 'NUMERIC':
+        if transpose or edge.target_vertex['var']['type'] == 'NUMERIC':
             conditions.append(edge.target_vertex['var'])
 
     return ({'type': 'infinity', 'vars': []}, eb + 1) if len(conditions) == 0 else (
         {'type': 'variables', 'vars': conditions, 'opr': 'min'}, eb)
 
 
-def lower_limit(vertex, eb):
+def lower_limit(vertex, eb, transpose):
     conditions = []
     for edge in vertex.in_edges():
-        conditions.append(edge.source_vertex['var'])
+        if not transpose or edge.target_vertex['var']['type'] == 'NUMERIC':
+            conditions.append(edge.source_vertex['var'])
     return ({'type': 'infinity', 'vars': []}, eb + 1) if len(conditions) == 0 else (
         {'type': 'variables', 'vars': conditions, 'opr': 'max'}, eb)
 
 
-def optimize(graph):
-    in_degrees = graph.degree(mode="in")
-    out_degrees = graph.degree(mode="out")
-    zero_in_degree = deque([v for v, deg in enumerate(in_degrees) if deg == 0])
-
-    root = dict()
-    tree = root
-
-    while zero_in_degree:
-        current = zero_in_degree.popleft()
-        tree[current] = dict()
-        if out_degrees[current] != 0:
-            tree = tree[current]
-        for neighbor in graph.neighbors(current, mode="out"):
-            in_degrees[neighbor] -= 1
-            if in_degrees[neighbor] == 0:
-                zero_in_degree.append(neighbor)
-
-    return root
-
-def traverse(subgraph, tree, integrals):
+def traverse(subgraph, tree, integrals, transpose):
     eb = 0
     for vertex_index in tree:
         vertex = subgraph.vs[vertex_index]
@@ -165,8 +175,8 @@ def traverse(subgraph, tree, integrals):
         integral = dict()
         integral['var'] = vertex['var']
         integral['var_name'] = vertex['name']
-        integral['upper_limit'], eb1 = upper_limit(vertex, 0)
-        integral['lower_limit'], eb2 = lower_limit(vertex, 0)
+        integral['upper_limit'], eb1 = upper_limit(vertex, 0, transpose)
+        integral['lower_limit'], eb2 = lower_limit(vertex, 0, transpose)
         integral['inner'] = dict()
         inner_tree = tree[vertex_index]
         eb = eb1 + eb2
@@ -175,7 +185,7 @@ def traverse(subgraph, tree, integrals):
                 'opr': 'product',
                 'integrals': []
             }
-            eb += traverse(subgraph, inner_tree, integral['inner']['integrals'])
+            eb += traverse(subgraph, inner_tree, integral['inner']['integrals'], transpose)
         integrals.append(integral)
     return eb
 
@@ -183,10 +193,19 @@ def traverse(subgraph, tree, integrals):
 def get_integrals(graph):
     # graph = graph.as_undirected()
     expression = {'opr': 'product', 'integrals': []}
-    sub_graphs = graph.connected_components(mode='weak').subgraphs()
-    for subgraph in sub_graphs:
-        tree = optimize(subgraph)
-        expression['eb'] = traverse(subgraph, tree, expression['integrals'])
+    var_map = dict(map(lambda v: (v['name'], v.index), graph.vs))
+    tree = dict()
+    depth = gen_expr(graph, tree, var_map, False)
+
+    tree_transpose = dict()
+    depth_transpose = gen_expr(graph, tree_transpose, var_map, True)
+
+    using_transpose = False
+    if not depth <= depth_transpose:
+        tree = tree_transpose
+        using_transpose = True
+
+    expression['eb'] = traverse(graph, tree, expression['integrals'], using_transpose)
     return expression
 
 
