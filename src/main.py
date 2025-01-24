@@ -1,5 +1,6 @@
 import argparse
 import sys
+from statistics import mean
 
 from core.builder import build
 from core.graph import plot
@@ -22,6 +23,7 @@ def get_args():
     parser.add_argument('--k', '-k', type=int, required=False, default=4)
     parser.add_argument('--input', '-i', type=str, required=False, default=None)
     parser.add_argument('--debug', '-dd', action='store_true', required=False, default=False)
+    parser.add_argument('--characterize', '-c', action='store_true', required=False, default=False)
 
     return parser.parse_args()
 
@@ -34,8 +36,26 @@ if __name__ == "__main__":
     if args.input:
         args.input = read_file(args.input)
 
+    expressions, paths_output, graph, depths, paths_count, variables_counts, conditions_counts = build(program, args)
 
-    expressions, paths_output, graph = build(program, args)
+    if args.characterize:
+        import json
+
+        print(json.dumps({
+            "max_depth": max(depths),
+            "avg_depth": mean(depths),
+            "min_depth": min(depths),
+            "max_variables": max(variables_counts),
+            "avg_variables": mean(variables_counts),
+            "min_variables": min(variables_counts),
+            "number_of_paths": paths_count,
+            "number_of_outputs": len(paths_output),
+            "max_conditions": max(conditions_counts),
+            "avg_conditions": mean(conditions_counts),
+            "min_conditions": min(conditions_counts),
+        }))
+
+        sys.exit(0)
 
     if not args.input_size:
         print("Couldn't find input size")

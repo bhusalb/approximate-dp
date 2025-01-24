@@ -10,8 +10,10 @@ parser.add_argument('--type', '-t', type=str, required=True)
 parser.add_argument('--all', '-a', action='store_true', required=False, default=False)
 
 type_to_title = {
-    'svt': 'SVT',
+    'svt': 'AboveThreshold',
     'noisy_min': 'Noisy Min',
+    'noisy_max': 'Noisy Max',
+    'svt_max': 'BelowThreshold'
 }
 
 args = parser.parse_args()

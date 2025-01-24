@@ -1,0 +1,37 @@
+INPUTSIZE 4;
+RANDOM TH = gauss(eps/4, 0);
+OUTPUT = [0];
+RANDOM Q1 = gauss(eps/2, INPUT[0]);
+RANDOM Q2 = gauss(eps/2, INPUT[1]);
+RANDOM Q3 = gauss(eps/2, INPUT[2]);
+RANDOM Q4 = gauss(eps/2, INPUT[3]);
+
+IF Q1 > Q2 THEN {
+    IF Q1 > Q3 THEN {
+        IF Q1 > Q4 THEN {
+            OUTPUT[0] = 0;
+        } ELSE {
+            OUTPUT[0] = 3;
+        }
+    } ELSE {
+        IF Q3 > Q4 THEN {
+            OUTPUT[0] = 2;
+        } ELSE {
+            OUTPUT[0] = 3;
+        }
+    }
+} ELSE {
+    IF Q2 > Q3 THEN {
+        IF Q2 > Q4 THEN {
+            OUTPUT[0] = 1;
+        } ELSE {
+            OUTPUT[0] = 3;
+        }
+    } ELSE {
+        IF Q3 > Q4 THEN {
+            OUTPUT[0] = 2;
+        } ELSE {
+            OUTPUT[0] = 3;
+        }
+    }
+}

@@ -3,6 +3,7 @@ import argparse
 import csv
 import os
 import subprocess
+import json
 
 
 def run_command(command, env):
@@ -58,6 +59,8 @@ if args.input:
 else:
     benchmark_time_template = '''python {main} -f {file_path} -e {eps} -d {delta}'''
 
+characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize'''
+
 eps = 0.5
 delta = 0.01
 
@@ -69,6 +72,11 @@ for example in examples:
     file_path = os.path.join(examples_dir, example)
 
     command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta)
+
+    _, characterization = run_command(characterization_template.format(**command_args), os.environ.copy())
+    characterization = json.loads(characterization)
+
+    output = output | characterization
 
     if args.input:
         command_args['input_path'] = input_path

@@ -1,0 +1,87 @@
+
+INPUTSIZE 14;
+RANDOM TH = gauss(eps/4, 0);
+OUTPUT = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    
+RANDOM Q0 = gauss(eps/2, INPUT[0]);
+IF Q0 > TH THEN {
+    OUTPUT[0] = 1;
+}ELSE {
+        
+RANDOM Q1 = gauss(eps/2, INPUT[1]);
+IF Q1 > TH THEN {
+    OUTPUT[1] = 1;
+}ELSE {
+        
+RANDOM Q2 = gauss(eps/2, INPUT[2]);
+IF Q2 > TH THEN {
+    OUTPUT[2] = 1;
+}ELSE {
+        
+RANDOM Q3 = gauss(eps/2, INPUT[3]);
+IF Q3 > TH THEN {
+    OUTPUT[3] = 1;
+}ELSE {
+        
+RANDOM Q4 = gauss(eps/2, INPUT[4]);
+IF Q4 > TH THEN {
+    OUTPUT[4] = 1;
+}ELSE {
+        
+RANDOM Q5 = gauss(eps/2, INPUT[5]);
+IF Q5 > TH THEN {
+    OUTPUT[5] = 1;
+}ELSE {
+        
+RANDOM Q6 = gauss(eps/2, INPUT[6]);
+IF Q6 > TH THEN {
+    OUTPUT[6] = 1;
+}ELSE {
+        
+RANDOM Q7 = gauss(eps/2, INPUT[7]);
+IF Q7 > TH THEN {
+    OUTPUT[7] = 1;
+}ELSE {
+        
+RANDOM Q8 = gauss(eps/2, INPUT[8]);
+IF Q8 > TH THEN {
+    OUTPUT[8] = 1;
+}ELSE {
+        
+RANDOM Q9 = gauss(eps/2, INPUT[9]);
+IF Q9 > TH THEN {
+    OUTPUT[9] = 1;
+}ELSE {
+        
+RANDOM Q10 = gauss(eps/2, INPUT[10]);
+IF Q10 > TH THEN {
+    OUTPUT[10] = 1;
+}ELSE {
+        
+RANDOM Q11 = gauss(eps/2, INPUT[11]);
+IF Q11 > TH THEN {
+    OUTPUT[11] = 1;
+}ELSE {
+        
+RANDOM Q12 = gauss(eps/2, INPUT[12]);
+IF Q12 > TH THEN {
+    OUTPUT[12] = 1;
+}ELSE {
+        
+RANDOM Q13 = gauss(eps/2, INPUT[13]);
+IF Q13 > TH THEN {
+    OUTPUT[13] = 1;
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}

@@ -204,8 +204,10 @@ def get_integrals(graph):
     if not depth <= depth_transpose:
         tree = tree_transpose
         using_transpose = True
+        depth = depth_transpose
 
     expression['eb'] = traverse(graph, tree, expression['integrals'], using_transpose)
+    expression['max_depth'] = depth
     return expression
 
 
@@ -215,15 +217,23 @@ def build(program, args):
     graph = None
 
     expressions = defaultdict(list)
+
+    depths = []
+    variables_counts = []
+    conditions_counts = []
     for path in paths:
         graph = build_graph(path)
-
+        variables_counts.append(len(graph.vs))
+        conditions_counts.append(len(graph.es))
         if not graph.is_dag():
             continue
 
-        expressions[str(path['output'])].append(get_integrals(graph))
+        expression = get_integrals(graph)
+        depths.append(expression['max_depth'])
+        expressions[str(path['output'])].append(expression)
 
-    return list(expressions.values()), list(expressions.keys()), graph
+    return (list(expressions.values()), list(expressions.keys()), graph, depths,
+            len(paths), variables_counts, conditions_counts)
 
 
 def get_paths(program, args):

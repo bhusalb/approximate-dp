@@ -1,10 +1,21 @@
 test,time,output
+example_20.dip,1.720636288324992,
+example_19.dip,1.30525008837382,
+example_18.dip,1.6945240497589111,
 example_8.dip,TIMEOUT,N/A
 example_9.dip,TIMEOUT,N/A
-example_4.dip,97.78022654851277,"{ ""DP"": 1}"
+example_16.dip,2.536144971847534,
+example_4.dip,181.6077535947164,"{ ""DP"": 1}"
 example_5.dip,TIMEOUT,N/A
+example_17.dip,2.2834249337514243,
+example_15.dip,2.0298608938852944,
 example_7.dip,TIMEOUT,N/A
 example_6.dip,TIMEOUT,N/A
-example_2.dip,4.610243558883667,"{ ""DP"": 1}"
-example_3.dip,32.034292459487915,"{ ""DP"": 1}"
-example_1.dip,1.4228164354960124,"{ ""DP"": 1}"
+example_14.dip,2.3621153036753335,
+example_10.dip,1.830264647801717,
+example_2.dip,6.054600477218628,"{ ""DP"": 1}"
+example_3.dip,50.32021927833557,"{ ""DP"": 1}"
+example_11.dip,2.729457060496012,
+example_13.dip,2.245962301890055,
+example_1.dip,2.455587863922119,"{ ""DP"": 1}"
+example_12.dip,1.9213372071584065,

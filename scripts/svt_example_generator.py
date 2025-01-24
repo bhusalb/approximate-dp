@@ -9,17 +9,25 @@ def write_to_file(file_name, program):
 
 parser = argparse.ArgumentParser(description='SVT example generator')
 parser.add_argument('--number', '-n', type=int, required=True)
+parser.add_argument('--max', action='store_true', required=False)
+
 args = parser.parse_args()
+
+sign = '<'
+
+if args.max:
+    sign = '>'
 
 
 def get_for_if_block(i):
     template = '''
 RANDOM Q{{INDEX}} = gauss(eps/2, INPUT[{{INDEX}}]);
-IF Q{{INDEX}} < TH THEN {
+IF Q{{INDEX}} {{SIGN}} TH THEN {
     OUTPUT[{{INDEX}}] = 1;
 }'''
 
     template = template.replace('{{INDEX}}', str(i))
+    template = template.replace('{{SIGN}}', sign)
 
     return template
 
@@ -48,8 +56,7 @@ def get_if_and_else_block(start, n):
 
 root_dir = os.path.join(os.path.dirname(__file__), '../')
 
-examples_dir = os.path.join(root_dir, 'examples', 'svt')
-
+examples_dir = os.path.join(root_dir, 'examples', 'svt' + "_max" if args.max else '')
 
 for i in range(1, args.number + 1):
     initial_block = get_initial_block(i)
