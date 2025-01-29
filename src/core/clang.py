@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import shlex
+import signal
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,22 @@ class Clang:
         command = [os.path.join(os.getcwd(), self.output)] + list(include_args)
         command = shlex.split(' '.join(command))
 
-        process = subprocess.run(
-            command,
-            check=True
-        )
+        try:
+            process = subprocess.run(
+                command,
+                check=True,
+                preexec_fn=os.setsid
+            )
+
+            # def kill_child_process(signum, frame):
+            #     if process and process.pid:
+            #         try:
+            #             # Send SIGTERM to the process group
+            #             os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+            #         except Exception as e:
+            #             print(f"Error killing child process: {e}")
+            #
+            # signal.signal(signal.SIGTERM, kill_child_process)
+            # signal.signal(signal.SIGINT, kill_child_process)
+        except subprocess.CalledProcessError as e:
+            sys.exit(e.returncode)

@@ -24,6 +24,7 @@ def get_args():
     parser.add_argument('--input', '-i', type=str, required=False, default=None)
     parser.add_argument('--debug', '-dd', action='store_true', required=False, default=False)
     parser.add_argument('--characterize', '-c', action='store_true', required=False, default=False)
+    parser.add_argument('--regular', '-r', action='store_true', required=False, default=False)
 
     return parser.parse_args()
 

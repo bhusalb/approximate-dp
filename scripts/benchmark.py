@@ -13,6 +13,7 @@ def run_command(command, env):
         command,
         env=env,
         stdout=subprocess.PIPE,
+        preexec_fn=os.setsid,
         timeout=600,
         shell=True)
 
@@ -38,71 +39,67 @@ def run_multiple_times(command, env, num_times):
         return None, None
 
 
-parser = argparse.ArgumentParser(description='Benchmarking tool')
-parser.add_argument('--folder', '-f', type=str, required=True)
-parser.add_argument('--input', '-i', action='store_true', required=False, default=False)
-
-args = parser.parse_args()
+# parser = argparse.ArgumentParser(description='Benchmarking tool')
+# parser.add_argument('--folder', '-f', type=str, required=True)
+# parser.add_argument('--input', '-i', action='store_true', required=False, default=False)
+#
+# args = parser.parse_args()
 
 root_dir = os.path.join(os.path.dirname(__file__), '../')
 
-examples_dir = os.path.join(root_dir, 'examples', args.folder)
 input_dir = os.path.join(root_dir, 'examples', 'inputs')
-
-examples = os.listdir(examples_dir)
 
 main_script = os.path.join(root_dir, 'src', 'main.py')
 rows = []
 
-if args.input:
-    benchmark_time_template = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path}'''
-else:
-    benchmark_time_template = '''python {main} -f {file_path} -e {eps} -d {delta}'''
-
+benchmark_time_template_single_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path}'''
+benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d {delta}'''
 characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize'''
 
 eps = 0.5
 delta = 0.01
 
-for example in examples:
-    i = int(example.split('.')[0].split('_')[-1])
-    input_path = os.path.join(input_dir, f'inputs_{i}.json')
-    output = dict()
-    output['test'] = example
-    file_path = os.path.join(examples_dir, example)
+folders = ['svt', 'svt_max', 'noisy_max', 'noisy_min']
+# folders = ['svt', 'svt_max', ]
 
-    command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta)
+with open(f'{root_dir}/results/result_details.csv', 'w', newline='') as outfile:
+    # writer = csv.DictWriter(outfile, rows[0].keys())
+    writer = None
 
-    _, characterization = run_command(characterization_template.format(**command_args), os.environ.copy())
-    characterization = json.loads(characterization)
+    for folder in folders:
+        examples_dir = os.path.join(root_dir, 'examples', folder)
+        examples = os.listdir(examples_dir)
 
-    output = output | characterization
+        for example in examples:
+            i = int(example.split('.')[0].split('_')[-1])
+            input_path = os.path.join(input_dir, f'inputs_{i}.json')
+            output = dict(folder=folder, input_size=i, eps=eps, delta=delta, test=example)
+            file_path = os.path.join(examples_dir, example)
 
-    if args.input:
-        command_args['input_path'] = input_path
+            command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta)
 
-    command = benchmark_time_template.format(**command_args)
+            _, characterization = run_command(characterization_template.format(**command_args), os.environ.copy())
+            characterization = json.loads(characterization)
 
-    print(command)
-    try:
-        mean_time, outputs = run_multiple_times(command, os.environ.copy(), 3)
-        output['time'] = mean_time
-        output['output'] = outputs[-1]
-    except:
-        output['time'] = "TIMEOUT"
-        output['output'] = "N/A"
-        print(f"TIMEOUT")
-    print('----------------------------------------------------------')
+            output = output | characterization
+            all_templates = dict(all=benchmark_time_template_all_inputs, single=benchmark_time_template_single_inputs)
+            for _type, template in all_templates.items():
+                command = template.format(**command_args)
+                print(command)
+                try:
+                    mean_time, outputs = run_multiple_times(command, os.environ.copy(), 3)
+                    output[f'time_{_type}'] = mean_time
+                    output[f'output_{_type}'] = outputs[-1]
+                except:
+                    output[f'time_{_type}'] = "TIMEOUT"
+                    output[f'output_{_type}'] = "N/A"
 
-    rows.append(output)
+                command_args['input_path'] = input_path
+            print('----------------------------------------------------------')
+
+            if not writer:
+                writer = csv.DictWriter(outfile, fieldnames=output.keys())
+                writer.writeheader()
+            writer.writerow(output)
 
 # rows.sort(key=lambda a: a['test'], reverse=False)
-
-suffix = ''
-if not args.input:
-    suffix = '_all'
-
-with open(f'{root_dir}/results/result_{args.folder}{suffix}.csv', 'w', newline='') as outfile:
-    writer = csv.DictWriter(outfile, rows[0].keys())
-    writer.writeheader()
-    writer.writerows(rows)

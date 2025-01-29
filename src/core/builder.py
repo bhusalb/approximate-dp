@@ -118,31 +118,33 @@ def get_k_eb_factors(paths, lower_eps):
     return math.ceil(k), eb
 
 
-def gen_expr(G, tree, var_map, transpose):
+def optimize(G, tree, var_map, transpose):
     # Check if the graph has multiple weakly connected components
     components = G.decompose(mode="weak")
     if len(components) > 1:
-        return max([gen_expr(comp, tree, var_map, transpose) for comp in components])
+        return max([optimize(comp, tree, var_map, transpose) for comp in components])
 
         # If the graph is a single node
     if len(G.vs) == 1:
-        v = G.vs[0]['name']
-        tree[var_map[v]] = dict()
+        if G.vs[0]['var']['type'] == 'RANDOM':
+            v = G.vs[0]['name']
+            tree[var_map[v]] = dict()
         return 1
 
         # If the graph has multiple nodes
     source_nodes = [v.index for v in G.vs if G.degree(v.index, mode="out" if transpose else "in") == 0]
-    source_names = [G.vs[idx]['name'] for idx in source_nodes]
+    sources = [(G.vs[idx]['name'], G.vs[idx]['var']['type']) for idx in source_nodes]
     G_prime = G.copy()
     G_prime.delete_vertices(source_nodes)
     depth = 0
-    for source in source_names:
-        v = var_map[source]
-        tree[v] = dict()
-        tree = tree[v]
-        depth += 1
+    for source, source_type in sources:
+        if source_type == 'RANDOM':
+            v = var_map[source]
+            tree[v] = dict()
+            tree = tree[v]
+            depth += 1
 
-    depth += gen_expr(G_prime, tree, var_map, transpose)
+    depth += optimize(G_prime, tree, var_map, transpose)
 
     return depth
 
@@ -170,8 +172,6 @@ def traverse(subgraph, tree, integrals, transpose):
     eb = 0
     for vertex_index in tree:
         vertex = subgraph.vs[vertex_index]
-        if vertex['var']['type'] == 'NUMERIC':
-            continue
         integral = dict()
         integral['var'] = vertex['var']
         integral['var_name'] = vertex['name']
@@ -190,15 +190,28 @@ def traverse(subgraph, tree, integrals, transpose):
     return eb
 
 
-def get_integrals(graph):
-    # graph = graph.as_undirected()
-    expression = {'opr': 'product', 'integrals': []}
+def regular_structure(graph):
+    ordering = graph.topological_sorting()
+    tree = dict()
+    depth = 0
+    current_tree = tree
+    for vertex in ordering:
+        if graph.vs[vertex]['var']['type'] == 'NUMERIC':
+            continue
+        current_tree[vertex] = dict()
+        current_tree = current_tree[vertex]
+        depth += 1
+
+    return tree, depth, False
+
+
+def optimize_structure(graph):
     var_map = dict(map(lambda v: (v['name'], v.index), graph.vs))
     tree = dict()
-    depth = gen_expr(graph, tree, var_map, False)
+    depth = optimize(graph, tree, var_map, False)
 
     tree_transpose = dict()
-    depth_transpose = gen_expr(graph, tree_transpose, var_map, True)
+    depth_transpose = optimize(graph, tree_transpose, var_map, True)
 
     using_transpose = False
     if not depth <= depth_transpose:
@@ -206,6 +219,13 @@ def get_integrals(graph):
         using_transpose = True
         depth = depth_transpose
 
+    return tree, depth, using_transpose
+
+
+def get_integrals(graph, args):
+    # graph = graph.as_undirected()
+    expression = {'opr': 'product', 'integrals': []}
+    tree, depth, using_transpose = regular_structure(graph) if args.regular else optimize_structure(graph)
     expression['eb'] = traverse(graph, tree, expression['integrals'], using_transpose)
     expression['max_depth'] = depth
     return expression
@@ -228,7 +248,7 @@ def build(program, args):
         if not graph.is_dag():
             continue
 
-        expression = get_integrals(graph)
+        expression = get_integrals(graph, args)
         depths.append(expression['max_depth'])
         expressions[str(path['output'])].append(expression)
 

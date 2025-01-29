@@ -56,7 +56,7 @@ def get_if_and_else_block(start, n):
 
 root_dir = os.path.join(os.path.dirname(__file__), '../')
 
-examples_dir = os.path.join(root_dir, 'examples', 'svt' + "_max" if args.max else '')
+examples_dir = os.path.join(root_dir, 'examples', 'svt' + ("_max" if args.max else ''))
 
 for i in range(1, args.number + 1):
     initial_block = get_initial_block(i)

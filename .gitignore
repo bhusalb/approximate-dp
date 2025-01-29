@@ -9,3 +9,4 @@ temp_program.c
 src/core/parser.out
 src/core/parsetab.py
 result.csv
+results/old_results

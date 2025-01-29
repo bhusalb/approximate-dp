@@ -467,9 +467,9 @@ int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb
 
 
     if (arf_cmp_d(sum_delta, delta) > 0) {
-        printf("\n\nsum diff: ");
-        arf_printd(sum_delta, prec);
         if (debug) {
+            printf("\n\nsum diff: ");
+            arf_printd(sum_delta, prec);
             printf("\nPassed!\n");
         }
         return 1;
@@ -524,7 +524,7 @@ int main(int argc, char *argv[]) {
     
     {{INPUTS}}
     
-    slong prec[] = { 8, 16, 32 };
+    slong prec[] = { 16, 32 };
     int prec_size = sizeof(prec) / sizeof(prec[0]);
 
     int (*compute_probability[])(arb_ptr, double, slong, double, int[]) = { {{ARRAY}} };
@@ -743,12 +743,14 @@ def get_integral(integral, current_index, variable_map):
     random_lower_size = len(indices_random_vars)
     random_lower = '{' + ','.join(indices_random_vars) + '}'
     numeric_lower_size = len(numeric_vars) + len(input_vars)
-    numeric_lower = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars)) + '}'
+    numeric = list(map(str, numeric_vars)) + list(map(lambda x: f'input[{x}]', input_vars))
+    numeric_lower = '{' + ','.join(numeric) + '}'
 
     indices_random_vars, numeric_vars, input_vars = get_limits(integral['upper_limit']['vars'], variable_map)
     random_upper_size = len(indices_random_vars)
     random_upper = '{' + ','.join(indices_random_vars) + '}'
-    numeric_upper = '{' + ','.join(map(str, numeric_vars)) + ','.join(map(lambda x: f'input[{x}]', input_vars)) + '}'
+    numeric = list(map(str, numeric_vars)) + list(map(lambda x: f'input[{x}]', input_vars))
+    numeric_upper = '{' + ','.join(numeric) + '}'
     numeric_upper_size = len(numeric_vars) + len(input_vars)
 
     inner_size = 0
