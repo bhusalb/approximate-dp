@@ -59,9 +59,11 @@ def p_output(p):
 
 
 def p_statement_random_variable(p):
-    '''random_var_assignment : RANDOM variable EQUALS gaussfunc'''
+    '''random_var_assignment : RANDOM variable EQUALS gaussfunc
+          | RANDOM variable EQUALS lapfunc
+    '''
 
-    p[0] = ('assignment', 'GAUSS', p[2], p[4])
+    p[0] = ('assignment', 'RANDOM', p[2], p[4])
 
 
 def p_statement_numeric_variable(p):
@@ -76,7 +78,15 @@ def p_gauss(p):
                 | GAUSS LPAREN EPS DIVIDE number COMMA number RPAREN
                 | GAUSS LPAREN EPS DIVIDE number COMMA inputindex RPAREN
     """
-    p[0] = p[5], p[7]
+    p[0] = 'gaussian', p[5], p[7]
+
+
+def p_laplace(p):
+    """lapfunc : LAP LPAREN EPS DIVIDE number COMMA variable RPAREN
+                | LAP LPAREN EPS DIVIDE number COMMA number RPAREN
+                | LAP LPAREN EPS DIVIDE number COMMA inputindex RPAREN
+    """
+    p[0] = 'laplace', p[5], p[7]
 
 
 def p_get_input_index(p):

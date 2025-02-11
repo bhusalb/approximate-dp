@@ -32,6 +32,7 @@ typedef struct Integral {
     
     int index;
     int holomorphic;
+    int distribution;
 } Integral;
 
 typedef struct Parameters {
@@ -113,9 +114,16 @@ int find_min(Parameters param) {
     return result_index;
 }
 
+double gaussian_error_bound(float k) {
+    return exp(-(pow(k, 2)) / 2);
+}
 
-double calculate_error_bound(float k) {
-    return exp(- (pow(k, 2)) / 2);
+double laplace_error_bound(float k) {
+    return exp(-k) / 2;
+}
+
+double calculate_error_bound(float k, int eb[2]) {
+    return eb[0] * gaussian_error_bound(k) + eb[1] * laplace_error_bound(k);
 }
 
 int** generate_combinations(int size) {
@@ -202,22 +210,11 @@ void compute_upper_limit(acb_t limit, Parameters param, slong prec) {
         }
     }
 }
-// Gaussian function for integration
-int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order, slong prec) {
-    acb_t norm_factor, exponent, diff, sigma, sigma_sq, const_factor, two, pi;
-    Parameters param = *(Parameters *) my_param;
-    Integral integral = *(param.root);
-    
-    if (order > 1)
-		flint_abort();
-		
-    acb_init(param.vars[integral.index]);
-    acb_set(param.vars[integral.index], x);
 
-    acb_init(sigma);
-    acb_div(sigma, integral.factor, param.eps, prec);
 
-    //printf("order %ld\n", order);
+int gaussian_pdf(acb_ptr result, const acb_t x, const acb_t mu, const acb_t sigma, slong order, slong prec) {
+    acb_t norm_factor, exponent, diff, sigma_sq, const_factor, two, pi;
+
     acb_init(norm_factor);
     acb_init(exponent);
     acb_init(diff);
@@ -225,7 +222,7 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
     acb_init(const_factor);
     acb_init(two);
     acb_init(pi);
-
+    
     // Initialize constants
     acb_set_si(two, 2);                // 2
     acb_const_pi(pi, prec);            // pi
@@ -239,7 +236,7 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
     // Calculate the exponent part: -(x - mu)^2 / (2 * sigma^2)
     acb_mul(sigma_sq, sigma, sigma, prec);  // sigma^2
     acb_mul(sigma_sq, sigma_sq, two, prec); // 2 * sigma^2
-    acb_sub(diff, x, integral.mu, prec);             // x - mu
+    acb_sub(diff, x, mu, prec);             // x - mu
     acb_mul(diff, diff, diff, prec);        // (x - mu)^2
     acb_div(exponent, diff, sigma_sq, prec);    // (x - mu)^2 / 2 * sigma^2
     acb_neg(exponent, exponent);            // -(x - mu)^2 / (2 * sigma^2)
@@ -248,10 +245,78 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
     acb_exp(exponent, exponent, prec);
 
     acb_mul(result, norm_factor, exponent, prec);
+    
+    acb_clear(norm_factor);
+    acb_clear(exponent);
+    acb_clear(diff);
+    acb_clear(sigma_sq);
+    acb_clear(const_factor);
+    acb_clear(two);
+    acb_clear(pi);
+    
+    return 0;
+}
+
+
+int laplace_pdf(acb_ptr result, const acb_t x, const acb_t mu, const acb_t b, slong order, slong prec) {
+    acb_t temp, exponent, factor;
+    acb_init(temp);
+    acb_init(exponent);
+    acb_init(factor);
+
+    // Compute |x - mu|
+    acb_sub(temp, x, mu, prec);
+    acb_real_abs(temp, temp, order != 0, prec);  // temp = |x - mu|
+
+    // Compute exponent: -|x - mu| / b
+    acb_div(exponent, temp, b, prec);
+    acb_neg(exponent, exponent);
+    acb_exp(exponent, exponent, prec); // exponent = exp(-|x - mu| / b)
+
+    // Compute factor: 1 / (2b)
+    acb_mul_2exp_si(factor, b, 1); // factor = 2b
+    acb_inv(factor, factor, prec); // factor = 1 / (2b)
+
+    // Compute final PDF: (1 / (2b)) * exp(-|x - mu| / b)
+    acb_mul(result, factor, exponent, prec);
+
+    // Clear temporary variables
+    acb_clear(temp);
+    acb_clear(exponent);
+    acb_clear(factor);
+    
+    return 0;
+}
+
+int integral_function(acb_ptr result, const acb_t x, void *my_param, slong order, slong prec) {
+    Parameters param = *(Parameters *) my_param;
+    Integral integral = *(param.root);
+    
+    int (*pdf[])(acb_ptr, const acb_t, const acb_t, const acb_t, slong, slong) = {gaussian_pdf, laplace_pdf};
+    
+    if (order > 1)
+		flint_abort();
+		
+    acb_init(param.vars[integral.index]);
+    acb_set(param.vars[integral.index], x);
+    
+    acb_t sigma;
+    
+    acb_init(sigma);
+    acb_div(sigma, integral.factor, param.eps, prec);
+    
+    pdf[integral.distribution](result, x, integral.mu, sigma, order, prec);
+
+    
     if (integral.inner_size) {
         for (int i = 0; i < integral.inner_size; i++) {
-            acb_t inner_res;
+            acb_t inner_res, lower_limit, upper_limit;
+            
+    
             acb_init(inner_res);
+            acb_init(lower_limit);
+            acb_init(upper_limit);
+            
             Integral inner = *(integral.inner[i]);
             param.root = &inner;
             slong goal = prec;
@@ -263,14 +328,15 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
             acb_calc_integrate_opt_t options;
             acb_calc_integrate_opt_init(options);
     
-            acb_t lower_limit;
-            acb_init(lower_limit);
             compute_lower_limit(lower_limit, param, prec);
-            acb_t upper_limit;
-            acb_init(upper_limit);
             compute_upper_limit(upper_limit, param, prec);
-            acb_calc_integrate(inner_res, gaussian_function, &(param), lower_limit, upper_limit, goal, tol, options, prec);
+            acb_calc_integrate(inner_res, integral_function, &(param), lower_limit, upper_limit, goal, tol, options, prec);
+            
             acb_mul(result, result, inner_res, prec);
+            
+            acb_clear(inner_res);
+            acb_clear(lower_limit);
+            acb_clear(upper_limit);
         }
     }
     /*
@@ -278,23 +344,17 @@ int gaussian_function(acb_ptr result, const acb_t x, void *my_param, slong order
         acb_indeterminate(result);
      } */
     
-    acb_clear(norm_factor);
-    acb_clear(exponent);
-    acb_clear(diff);
-    acb_clear(sigma_sq);
-    acb_clear(const_factor);
-    acb_clear(two);
-    acb_clear(pi);
+    acb_clear(sigma);
     return 0;
 }
-
 
 
 void set_integral(Integral *integral, int index, double mu, double factor,
         int upper_has_infinity, int lower_has_infinity, int random_lower[], int random_lower_size, 
         int random_upper[], int random_upper_size,
         float numeric_lower[], int numeric_lower_size,
-        float numeric_upper[], int numeric_upper_size, int inner_size
+        float numeric_upper[], int numeric_upper_size, int inner_size,
+        int distribution
     ) {
     acb_init(integral->mu);
     acb_set_d(integral->mu, mu);
@@ -327,13 +387,14 @@ void set_integral(Integral *integral, int index, double mu, double factor,
     integral->lower_has_infinity = lower_has_infinity;
     integral->index = index;
     integral->holomorphic = 1;
+    integral->distribution = distribution;
 }
 
 {{WHOLE_BLOCK}}
 
 int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr arb_eps, double delta, int k, slong prec, int debug) {
     char paths_output[][1000] = { {{PATHS_OUTPUT}} }; 
-    int eb[] = { {{EB}} };
+    int eb[][2] = { {{EB}} };
     
     arf_t sum_delta;
     arf_init(sum_delta);
@@ -349,7 +410,7 @@ int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr ar
         arf_init(u);
         arf_init(diff);
         
-        arb_set_d(arb_prob_eb, eb[i] * calculate_error_bound(k));
+        arb_set_d(arb_prob_eb, calculate_error_bound(k, eb[i]));
         arb_add(arb_prob_eb, probs[i], arb_prob_eb, prec);
 
         arb_exp(product_eps_prob_adj, arb_eps, prec);
@@ -408,7 +469,7 @@ int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr ar
 
 int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr arb_eps, double delta, int k, slong prec, int debug) {
     char paths_output[][1000] = { {{PATHS_OUTPUT}} }; 
-    int eb[] = { {{EB}} };
+    int eb[][2] = { {{EB}} };
     
     arf_t sum_delta;
     arf_init(sum_delta);
@@ -424,7 +485,7 @@ int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb
         arf_init(u);
         arf_init(diff);
         
-        arb_set_d(arb_prob_eb, eb[i] * calculate_error_bound(k));
+        arb_set_d(arb_prob_eb, calculate_error_bound(k, eb[i]));
         arb_add(arb_prob_eb, probs_adj[i], arb_prob_eb, prec);
 
         arb_exp(product_eps_prob_adj, arb_eps, prec);
@@ -694,7 +755,7 @@ int integrals_{{INDEX}}(acb_ptr result, double eps, slong prec, double d_k, int 
     acb_t upper_limit;
     acb_init(upper_limit);
     compute_upper_limit(upper_limit, parameters, prec);
-    acb_calc_integrate(result, gaussian_function, &parameters, lower_limit, upper_limit , goal, tol, options, prec);
+    acb_calc_integrate(result, integral_function, &parameters, lower_limit, upper_limit , goal, tol, options, prec);
 
     return 0;
 }
@@ -738,6 +799,16 @@ def get_limits(vars, variable_map):
     return indices_random_vars, numeric_vars, input_vars
 
 
+def get_pdf_type(integral):
+    if integral['var']['dist'] == 'gaussian':
+        return '0'
+
+    if integral['var']['dist'] == 'laplace':
+        return '1'
+
+    raise Exception('Unsupported pdf type')
+
+
 def get_integral(integral, current_index, variable_map):
     indices_random_vars, numeric_vars, input_vars = get_limits(integral['lower_limit']['vars'], variable_map)
     random_lower_size = len(indices_random_vars)
@@ -768,7 +839,8 @@ def get_integral(integral, current_index, variable_map):
         {get_factor_value(integral)}, {has_infinity(integral['upper_limit'])}, {has_infinity(integral['lower_limit'])}, random_lower{current_index}, {random_lower_size},
         random_upper{current_index}, {random_upper_size},
         numeric_lower{current_index}, {numeric_lower_size}, 
-        numeric_upper{current_index}, {numeric_upper_size}, {inner_size}
+        numeric_upper{current_index}, {numeric_upper_size}, {inner_size},
+        {get_pdf_type(integral)}
     );
     '''
     # if past_index:
@@ -844,21 +916,21 @@ def get_block_for_output(index, possible_paths, output_str):
 
     block = ''
 
-    eb = 0
+    eb = {'gaussian': 0, 'laplace': 0}
 
     sum_integrals = []
     for i, path in enumerate(possible_paths):
         index_prefix = str(index) + '_' + str(i)
-        product_block, eb = get_block_for_path(path, index_prefix)
+        product_block, inner_eb = get_block_for_path(path, index_prefix)
         block += product_block
         sum_integrals.append('product_integrals_' + index_prefix)
+        eb = {key: inner_eb[key] + eb[key] for key in inner_eb.keys()}
 
     func_block = func_block.replace('{{ARRAY}}', ', '.join(sum_integrals))
-
     func_block = func_block.replace('{{INDEX}}', str(index))
 
     block += func_block
-    return block, eb
+    return block, [eb['gaussian'], eb['laplace']]
 
 
 def default_input_generation(args):
@@ -940,7 +1012,7 @@ def process(outputs, paths_output, args):
         block, eb = get_block_for_output(index, possible_paths, paths_output[index])
         whole_block += block
         probability_array.append(f'compute_probability_for_output_{index}')
-        eb_array.append(str(eb))
+        eb_array.append(str(eb).replace('[', '{').replace(']', '}'))
 
     out = cprog.replace('{{WHOLE_BLOCK}}', whole_block)
     out = out.replace('{{ARRAY}}', ', '.join(probability_array))

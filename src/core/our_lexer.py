@@ -2,7 +2,7 @@ from ply import *
 
 keywords = (
     'IF', 'THEN', 'RETURN',
-    'TRUE', 'FALSE', 'AND', 'OR', 'NOT', 'GAUSS', 'EPS',
+    'TRUE', 'FALSE', 'AND', 'OR', 'NOT', 'GAUSS', 'EPS', 'LAP',
     'RANDOM', 'NUMERIC', 'ELSE', 'OUTPUT', 'INPUT', 'INPUTSIZE'
 )
 
@@ -43,6 +43,7 @@ t_SEMI = r';'
 # t_AND
 t_RANDOM = r'RANDOM'
 t_GAUSS = r'gauss'
+t_LAP = r'lap'
 t_EPS = r'eps'
 t_LCURLY = r'\{'
 t_RCURLY = r'\}'

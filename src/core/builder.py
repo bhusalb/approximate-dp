@@ -1,10 +1,7 @@
 import copy
-import math
 from collections import defaultdict
-from collections import deque
 
 from .graph import build_graph
-from .integral_bound import calculate_bounds
 
 
 def flip_comparison(cmp):
@@ -33,9 +30,9 @@ def handle_assignment(statement, path):
     if statement[1] == 'NUMERIC':
         path['variables'][statement[2][1]] = dict(type='NUMERIC', value=statement[3], name=statement[2][1])
 
-    if statement[1] == 'GAUSS':
-        path['variables'][statement[2][1]] = dict(type='RANDOM', dist=statement[1], factor=statement[3][0],
-                                                  mean=get_value_by_index_or_var_name(statement[3][1], path),
+    if statement[1] == 'RANDOM':
+        path['variables'][statement[2][1]] = dict(type='RANDOM', dist=statement[3][0], factor=statement[3][1],
+                                                  mean=get_value_by_index_or_var_name(statement[3][2], path),
                                                   name=statement[2][1])
 
 
@@ -92,32 +89,6 @@ def handle_statement(program, index, args, path, paths):
     handle_statement(program, index + 1, args, path, paths)
 
 
-def get_k_eb_factors(paths, lower_eps):
-    vars_in_conditions = set()
-    sigmas = []
-    for path in paths:
-        for condition in path['conditions']:
-            vars_in_conditions.add(condition[1][1])
-            vars_in_conditions.add(condition[3][1])
-
-            if path['variables'][condition[1][1]]['type'] == 'RANDOM' and path['variables'][condition[1][1]][
-                'dist'] == 'GAUSS':
-                sigmas.append(
-                    path['variables'][condition[1][1]]['factor'] / lower_eps
-                )
-
-            if path['variables'][condition[3][1]]['type'] == 'RANDOM' and path['variables'][condition[3][1]][
-                'dist'] == 'GAUSS':
-                sigmas.append(
-                    path['variables'][condition[3][1]]['factor'] / lower_eps
-                )
-
-    max_sigma = max(sigmas)
-    k, eb = calculate_bounds(max_sigma)
-
-    return math.ceil(k), eb
-
-
 def optimize(G, tree, var_map, transpose):
     # Check if the graph has multiple weakly connected components
     components = G.decompose(mode="weak")
@@ -169,7 +140,7 @@ def lower_limit(vertex, eb, transpose):
 
 
 def traverse(subgraph, tree, integrals, transpose):
-    eb = 0
+    eb = {'gaussian': 0, 'laplace': 0}
     for vertex_index in tree:
         vertex = subgraph.vs[vertex_index]
         integral = dict()
@@ -179,13 +150,15 @@ def traverse(subgraph, tree, integrals, transpose):
         integral['lower_limit'], eb2 = lower_limit(vertex, 0, transpose)
         integral['inner'] = dict()
         inner_tree = tree[vertex_index]
-        eb = eb1 + eb2
+        eb[vertex['var']['dist']] = eb1 + eb2
         if inner_tree:
             integral['inner'] = {
                 'opr': 'product',
                 'integrals': []
             }
-            eb += traverse(subgraph, inner_tree, integral['inner']['integrals'], transpose)
+            inner_eb = traverse(subgraph, inner_tree, integral['inner']['integrals'], transpose)
+            eb = {key: inner_eb[key] + eb[key] for key in inner_eb.keys()}
+
         integrals.append(integral)
     return eb
 
