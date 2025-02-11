@@ -1,7 +1,7 @@
 import os, csv
 
 results1 = os.path.join(os.path.dirname(__file__), '../', 'results', 'result_final_optimal.csv')
-results2 = os.path.join(os.path.dirname(__file__), '../', 'results', 'result_temp.csv')
+results2 = os.path.join(os.path.dirname(__file__), '../', 'results', 'result_nonpriv_optimal.csv')
 
 final = os.path.join(os.path.dirname(__file__), '../', 'results', 'result_optimal.csv')
 

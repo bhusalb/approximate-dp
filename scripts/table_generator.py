@@ -9,7 +9,8 @@ type_to_title = {
     'svt_max': r'\BelowThreshold',
     'noisy_min': r'\NoisyMin',
     'noisy_max': r'\NoisyMax',
-
+    'nonpriv_svt': r'\NonPrivAboveThreshold',
+    'nonpriv_svt_max': r'\NonPrivBelowThreshold'
 }
 
 
@@ -23,8 +24,8 @@ def format_row(row, required_fields):
         if 'time' in field and field in row:
             if row[field] == 'TIMEOUT':
                 row[field] = r'$\timeout$'
-            elif row[field] == '-':
-                row[field] = r'-'
+            elif row[field] == '-' or row[field] == '$-$':
+                row[field] = r'$-$'
             else:
                 row[field] = round(float(row[field]), 2)
 
@@ -50,14 +51,14 @@ def format_row_new(row, _type=None):
             elif row[output] == '{ "DP": -1}':
                 row[output] = r'$\times$'
             elif row[output] == '{ "DP": 0}':
-                row[output] = r'$\unresolved$'
+                row[output] = r'$\tableunresolved$'
             elif not row[output]:
                 row[output] = r'$\experimenterror$'
                 time = 'time'
                 if '_' in output:
                     suffix = output.rsplit('_', 1)[-1]
                     time = f'{time}_{suffix}'
-                row[time] = '-'
+                row[time] = '$-$'
     return row
 
 
@@ -83,8 +84,8 @@ def format_field(value, field):
 
 master = read_csv(os.path.join(results_dir, f'result_optimal.csv'))
 
-interesting_fields = ['type', 'input_size', 'output_single', 'output_all', 'time_single', 'time_all', 'number_of_paths',
-                      'avg_conditions']
+interesting_fields = ['type', 'input_size', 'number_of_paths',
+                      'avg_conditions', 'output_single', 'time_single', 'output_all', 'time_all', ]
 
 fp = open(os.path.join(results_dir, f'table_1.csv'), 'w')
 
@@ -94,7 +95,7 @@ writer.writeheader()
 master_rows = []
 for key in master:
     row = master[key]
-    if 'svt' in row['folder']:
+    if row['folder'].startswith('svt'):
         if not (row['input_size'] in [1, 2, 3, 5, 23, 25] or row['input_size'] % 4 == 0):
             continue
 
@@ -103,7 +104,7 @@ for key in master:
 master_rows = sorted(master_rows, key=lambda x: (x['type'], x['input_size']))
 writer.writerows(master_rows)
 
-regular_data = read_csv(os.path.join(results_dir, f'regular_data.csv'))
+regular_data = read_csv(os.path.join(results_dir, f'result_unoptimized.csv'))
 table_2_rows = []
 table_2_fields = ['type', 'input_size', ]
 
@@ -132,7 +133,7 @@ writer.writerows(table_2_rows)
 table_3_rows = []
 
 table_3_required_fields = ['delta', 'eps', 'time']
-with open(os.path.join(results_dir, f'result_new_scaling.csv'), 'r') as f:
+with open(os.path.join(results_dir, f'result_scaling.csv'), 'r') as f:
     reader = csv.DictReader(f)
 
     for row in reader:

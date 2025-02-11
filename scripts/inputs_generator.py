@@ -14,7 +14,7 @@ for i in range(1, args.number + 1):
     with open(f'{examples_dir}/inputs_{i}.json', 'w') as f:
         _input = [
             [
-                [0] * i, [1] * i,
+                [0] * i, ([0] * (i - 1)) + [1] ,
             ]
         ]
         f.write(json.dumps(_input))

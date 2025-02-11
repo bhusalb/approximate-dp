@@ -4,16 +4,19 @@ import argparse
 import matplotlib.pyplot as plt
 
 from matplotlib.ticker import MaxNLocator
-
+plt.rcParams.update({
+    # "text.usetex": True,
+    "font.family": "sans-serif"
+})
 parser = argparse.ArgumentParser(description='Benchmarking tool')
 # parser.add_argument('--type', '-t', type=str, required=True)
 parser.add_argument('--all', '-a', action='store_true', required=False, default=False)
 
 type_to_title = {
-    'svt_max': 'Above Threshold',
+    'svt_max': r'$\text{SVT-Gauss-Le}$',
     # 'noisy_min': 'Noisy Min',
     # 'noisy_max': 'Noisy Max',
-    'svt': 'Below Threshold'
+    'svt': r'$\text{SVT-Gauss}$'
 }
 
 type_to_marker = {
@@ -73,7 +76,7 @@ for folder in folders:
     plt.plot(inputs_count, time_taken, label=type_to_title[folder], linestyle=type_to_linestyle[folder],
              marker=type_to_marker[folder])
     # plt.legend(loc="upper left")
-    plt.xlabel("Size")
+    plt.xlabel("$N$")
     # plt.xlim(0, int(n_box_rows[-1]['n']))
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
 

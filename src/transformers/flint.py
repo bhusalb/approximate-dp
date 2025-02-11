@@ -332,7 +332,7 @@ void set_integral(Integral *integral, int index, double mu, double factor,
 {{WHOLE_BLOCK}}
 
 int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr arb_eps, double delta, int k, slong prec, int debug) {
-    char paths_output[][100] = { {{PATHS_OUTPUT}} }; 
+    char paths_output[][1000] = { {{PATHS_OUTPUT}} }; 
     int eb[] = { {{EB}} };
     
     arf_t sum_delta;
@@ -407,7 +407,7 @@ int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr ar
 
 
 int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr arb_eps, double delta, int k, slong prec, int debug) {
-    char paths_output[][100] = { {{PATHS_OUTPUT}} }; 
+    char paths_output[][1000] = { {{PATHS_OUTPUT}} }; 
     int eb[] = { {{EB}} };
     
     arf_t sum_delta;
@@ -534,7 +534,7 @@ int main(int argc, char *argv[]) {
     arb_init(arb_eps);
     arb_set_d(arb_eps, eps);
     
-    char paths_output[][100] = { {{PATHS_OUTPUT}} }; 
+    char paths_output[][1000] = { {{PATHS_OUTPUT}} }; 
     int is_dp = 1;
     int is_not_dp = 0;
     for (int prec_index = 0; prec_index < prec_size; prec_index++) {

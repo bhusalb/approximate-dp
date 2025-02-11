@@ -57,12 +57,15 @@ benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d
 characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize'''
 
 eps = 0.5
-delta = 0.01
+delta = 0.001
 
-folders = ['svt', 'svt_max', 'noisy_max', 'noisy_min']
+# folders = ['svt', 'svt_max', 'nonpriv_svt', 'nonpriv_svt_max', 'noisy_max', 'noisy_min']
+
+folders = ['nonpriv_svt', 'nonpriv_svt_max', ]
+
 # folders = ['svt', 'svt_max', ]
 
-with open(f'{root_dir}/results/result_details.csv', 'w', newline='') as outfile:
+with open(f'{root_dir}/results/result_nonpriv_optimal.csv', 'w', newline='') as outfile:
     # writer = csv.DictWriter(outfile, rows[0].keys())
     writer = None
 
