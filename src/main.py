@@ -1,12 +1,14 @@
 import argparse
 import sys
 from statistics import mean
-
+from decimal import *
 from core.builder import build
 from core.graph import plot
 from core.our_parser import parse
 from core.clang import Clang
 from transformers import flint, mathematica
+
+getcontext().prec = 32
 
 
 def read_file(file_name):
@@ -18,13 +20,15 @@ def read_file(file_name):
 def get_args():
     parser = argparse.ArgumentParser(description='Approx DP')
     parser.add_argument('--file', '-f', type=str, required=True)
-    parser.add_argument('--eps', '-e', type=float, required=True)
+    parser.add_argument('--eps', '-e', type=Decimal, required=True)
     parser.add_argument('--delta', '-d', type=float, required=False)
+    parser.add_argument('--deps', '-D', type=float, required=False, default=1)
     parser.add_argument('--k', '-k', type=int, required=False, default=4)
     parser.add_argument('--input', '-i', type=str, required=False, default=None)
     parser.add_argument('--debug', '-dd', action='store_true', required=False, default=False)
     parser.add_argument('--characterize', '-c', action='store_true', required=False, default=False)
     parser.add_argument('--regular', '-r', action='store_true', required=False, default=False)
+    parser.add_argument('--output', '-o', type=str, required=False, default=None)
 
     return parser.parse_args()
 
@@ -66,13 +70,12 @@ if __name__ == "__main__":
 
     if args.debug:
         # plot(graph)
-        # mathematica.process(expressions, paths_output, args)
+        mathematica.process(expressions, paths_output, args)
         pass
     clang = Clang('gcc', library_dirs=['flint'])
     clang.compile_binary('temp_program.c', 'temp_program')
     clang.output = 'temp_program'
-    cagrs = {'eps': args.eps, 'delta': args.delta, 'k': args.k}
-
+    cagrs = {'eps': args.eps, 'delta': args.delta, 'k': args.k, 'D': args.deps}
     if args.debug:
         cagrs['debug'] = ''
 

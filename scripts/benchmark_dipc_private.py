@@ -14,7 +14,7 @@ def run_command(command, env):
         env=env,
         stdout=subprocess.PIPE,
         preexec_fn=os.setsid,
-        timeout=600,
+        timeout=100000,
         shell=True)
 
     execution_time = time.time() - start_time
@@ -47,40 +47,37 @@ def run_multiple_times(command, env, num_times):
 
 root_dir = os.path.join(os.path.dirname(__file__), '../')
 
-input_dir = os.path.join(root_dir, 'examples', 'inputs')
+input_dir = os.path.join(root_dir, 'examples', 'dipc_inputs')
 
 main_script = os.path.join(root_dir, 'src', 'main.py')
 rows = []
 
-benchmark_time_template_single_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path}'''
-benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d {delta}'''
+template = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k 8'''
 characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize'''
 
 eps = 0.5
-delta = 0.001
+delta = 0
 
 # folders = ['svt_laplace', 'svt_laplace_max', 'svt', 'svt_max', 'nonpriv_svt', 'nonpriv_svt_max', 'noisy_max', 'noisy_min']
 
-folders = ['svt_laplace', 'svt_laplace_max', ]
+folder = 'svt_laplace_max'
 
 # folders = ['nonpriv_svt', 'nonpriv_svt_max', ]
 
 # folders = ['svt', 'svt_max', ]
 
-with open(f'{root_dir}/results/result_laplace.csv', 'a', newline='') as outfile:
+with open(f'{root_dir}/results/result_dipc_private_1.csv', 'a', newline='') as outfile:
     # writer = csv.DictWriter(outfile, rows[0].keys())
     writer = None
 
-    for folder in folders:
+    for eps in [1, 2]:
+
         examples_dir = os.path.join(root_dir, 'examples', folder)
         examples = os.listdir(examples_dir)
 
         for example in examples:
             i = int(example.split('.')[0].split('_')[-1])
-
-            if i not in [8,9]:
-                continue
-            input_path = os.path.join(input_dir, f'inputs_{i}.json')
+            input_path = os.path.join(input_dir, f'{i}.json')
             output = dict(folder=folder, input_size=i, eps=eps, delta=delta, test=example)
             file_path = os.path.join(examples_dir, example)
 
@@ -90,21 +87,18 @@ with open(f'{root_dir}/results/result_laplace.csv', 'a', newline='') as outfile:
             characterization = json.loads(characterization)
 
             output = output | characterization
-            all_templates = dict(all=benchmark_time_template_all_inputs, single=benchmark_time_template_single_inputs)
-            for _type, template in all_templates.items():
-                command = template.format(**command_args)
-                print(command)
-                try:
-                    mean_time, outputs = run_multiple_times(command, os.environ.copy(), 3)
-                    output[f'time_{_type}'] = mean_time
-                    output[f'output_{_type}'] = outputs[-1]
-                except:
-                    output[f'time_{_type}'] = "TIMEOUT"
-                    output[f'output_{_type}'] = "N/A"
+            command_args['input_path'] = input_path
+            command = template.format(**command_args)
+            print(command)
+            try:
+                mean_time, outputs = run_multiple_times(command, os.environ.copy(), 2)
+                output[f'time'] = mean_time
+                output[f'output'] = outputs[-1]
+            except:
+                output[f'time'] = "TIMEOUT"
+                output[f'output'] = "N/A"
 
-                command_args['input_path'] = input_path
-            print(f'---{example}    time single {round(output["time_single"], 2)}---')
-
+            print(f'---{example}  time {output["time"]} output {output["output"]}---')
             if not writer:
                 writer = csv.DictWriter(outfile, fieldnames=output.keys())
                 writer.writeheader()

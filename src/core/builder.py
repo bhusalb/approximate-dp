@@ -120,23 +120,34 @@ def optimize(G, tree, var_map, transpose):
     return depth
 
 
-def upper_limit(vertex, eb, transpose):
+def upper_limit(vertex, eb, transpose, inner):
     conditions = []
     for edge in vertex.out_edges():
         if transpose or edge.target_vertex['var']['type'] == 'NUMERIC':
             conditions.append(edge.target_vertex['var'])
 
-    return ({'type': 'infinity', 'vars': []}, eb + 1) if len(conditions) == 0 else (
-        {'type': 'variables', 'vars': conditions, 'opr': 'min'}, eb)
+    if len(conditions) == 0:
+        if inner:
+            return {'type': 'infinity', 'vars': []}, eb + 1
+        else:
+            return {'type': 'mean', 'mean': vertex['var']['mean'], 'vars': []}, eb
+
+    return {'type': 'variables', 'vars': conditions, 'opr': 'min'}, eb
 
 
-def lower_limit(vertex, eb, transpose):
+def lower_limit(vertex, eb, transpose, inner):
     conditions = []
     for edge in vertex.in_edges():
         if not transpose or edge.target_vertex['var']['type'] == 'NUMERIC':
             conditions.append(edge.source_vertex['var'])
-    return ({'type': 'infinity', 'vars': []}, eb + 1) if len(conditions) == 0 else (
-        {'type': 'variables', 'vars': conditions, 'opr': 'max'}, eb)
+
+    if len(conditions) == 0:
+        if inner:
+            return {'type': 'infinity', 'vars': []}, eb + 1
+        else:
+            return {'type': 'mean', 'mean': vertex['var']['mean'], 'vars': []}, eb
+
+    return {'type': 'variables', 'vars': conditions, 'opr': 'max'}, eb
 
 
 def traverse(subgraph, tree, integrals, transpose):
@@ -146,10 +157,12 @@ def traverse(subgraph, tree, integrals, transpose):
         integral = dict()
         integral['var'] = vertex['var']
         integral['var_name'] = vertex['name']
-        integral['upper_limit'], eb1 = upper_limit(vertex, 0, transpose)
-        integral['lower_limit'], eb2 = lower_limit(vertex, 0, transpose)
         integral['inner'] = dict()
         inner_tree = tree[vertex_index]
+
+        integral['upper_limit'], eb1 = upper_limit(vertex, 0, transpose, inner_tree)
+        integral['lower_limit'], eb2 = lower_limit(vertex, 0, transpose, inner_tree)
+
         eb[vertex['var']['dist']] = eb1 + eb2
         if inner_tree:
             integral['inner'] = {

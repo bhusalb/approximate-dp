@@ -1,5 +1,6 @@
 import json
 import math
+from ast import literal_eval
 
 cprog = r'''#include <string.h>
 #include <stdlib.h>  // Include the standard library for atol()
@@ -33,6 +34,9 @@ typedef struct Integral {
     int index;
     int holomorphic;
     int distribution;
+    
+    int upper_has_mean;
+    int lower_has_mean;
 } Integral;
 
 typedef struct Parameters {
@@ -151,7 +155,9 @@ float float_max(float nums[], int size) {
 }
 
 void compute_lower_limit(acb_t limit, Parameters param, slong prec) {
-    if (param.root->lower_has_infinity == 1) {
+    if (param.root->lower_has_mean) {
+        acb_set(limit, param.root->mu);
+    } else if (param.root->lower_has_infinity == 1) {
         acb_t prd;
         acb_init(prd);
         acb_div(prd, param.root->factor, param.eps, prec);
@@ -187,7 +193,9 @@ float float_min(float nums[], int size) {
 }
 
 void compute_upper_limit(acb_t limit, Parameters param, slong prec) {
-    if (param.root->upper_has_infinity == 1) {
+    if (param.root->upper_has_mean) {
+        acb_set(limit, param.root->mu);
+    } else if (param.root->upper_has_infinity) {
         acb_t prd;
         acb_init(prd);
         acb_div(prd, param.root->factor, param.eps, prec);
@@ -332,6 +340,14 @@ int integral_function(acb_ptr result, const acb_t x, void *my_param, slong order
             compute_upper_limit(upper_limit, param, prec);
             acb_calc_integrate(inner_res, integral_function, &(param), lower_limit, upper_limit, goal, tol, options, prec);
             
+            if (inner.lower_has_mean || inner.upper_has_mean) {
+                acb_t half;
+                acb_init(half);
+                acb_set_d(half, 0.5);
+                acb_add(inner_res, inner_res, half, prec);
+                acb_clear(half);
+            }
+            
             acb_mul(result, result, inner_res, prec);
             
             acb_clear(inner_res);
@@ -354,7 +370,8 @@ void set_integral(Integral *integral, int index, double mu, double factor,
         int random_upper[], int random_upper_size,
         float numeric_lower[], int numeric_lower_size,
         float numeric_upper[], int numeric_upper_size, int inner_size,
-        int distribution
+        int distribution,
+        int upper_has_mean, int lower_has_mean
     ) {
     acb_init(integral->mu);
     acb_set_d(integral->mu, mu);
@@ -388,6 +405,9 @@ void set_integral(Integral *integral, int index, double mu, double factor,
     integral->index = index;
     integral->holomorphic = 1;
     integral->distribution = distribution;
+    
+    integral->upper_has_mean = upper_has_mean;
+    integral->lower_has_mean = lower_has_mean;
 }
 
 {{WHOLE_BLOCK}}
@@ -412,7 +432,7 @@ int check_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb_ptr ar
         
         arb_set_d(arb_prob_eb, calculate_error_bound(k, eb[i]));
         arb_add(arb_prob_eb, probs[i], arb_prob_eb, prec);
-
+        
         arb_exp(product_eps_prob_adj, arb_eps, prec);
         arb_mul(product_eps_prob_adj, product_eps_prob_adj, probs_adj[i], prec);
         
@@ -566,26 +586,29 @@ int main(int argc, char *argv[]) {
     int input_length = {{INPUT_SIZE}};
     int debug = 0;
     int k;
+    double D = 1;
 
     for (int i = 1; i < argc; i++)
     {
         if (!strcmp(argv[i], "-delta"))
             delta = atof(argv[i + 1]);
         if (!strcmp(argv[i], "-eps")) 
-            eps = atof(argv[i+1]);
+            eps = (double) atof(argv[i+1]);
         if (!strcmp(argv[i], "-k"))
             k = atoi(argv[i + 1]);
         if (!strcmp(argv[i], "-debug"))
             debug = 1;
+        if (!strcmp(argv[i], "-D"))
+            D = (double) atof(argv[i+1]);
     }
     
     if (debug) {
-        printf("k=%d, eps=%f, delta=%f, input_length=%d\n\n", k, eps, delta, input_length);
+        printf("k=%d, eps=%.32f, delta=%f, input_length=%d\n\n", k, eps, delta, input_length);
     }
     
     {{INPUTS}}
     
-    slong prec[] = { 16, 32 };
+    slong prec[] = { 32 };
     int prec_size = sizeof(prec) / sizeof(prec[0]);
 
     int (*compute_probability[])(arb_ptr, double, slong, double, int[]) = { {{ARRAY}} };
@@ -593,7 +616,7 @@ int main(int argc, char *argv[]) {
         
     arb_t arb_eps;
     arb_init(arb_eps);
-    arb_set_d(arb_eps, eps);
+    arb_set_d(arb_eps, eps * D);
     
     char paths_output[][1000] = { {{PATHS_OUTPUT}} }; 
     int is_dp = 1;
@@ -756,7 +779,14 @@ int integrals_{{INDEX}}(acb_ptr result, double eps, slong prec, double d_k, int 
     acb_init(upper_limit);
     compute_upper_limit(upper_limit, parameters, prec);
     acb_calc_integrate(result, integral_function, &parameters, lower_limit, upper_limit , goal, tol, options, prec);
-
+    
+     if (parameters.root->lower_has_mean || parameters.root->upper_has_mean) {
+        acb_t half;
+        acb_init(half);
+        acb_set_d(half, 0.5);
+        acb_add(result, result, half, prec);
+    }
+    
     return 0;
 }
 
@@ -779,6 +809,10 @@ def get_factor_value(integral):
 
 def has_infinity(limit):
     return 1 if limit['type'] == 'infinity' else 0
+
+
+def is_mean(limit):
+    return 1 if limit['type'] == 'mean' else 0
 
 
 def get_limits(vars, variable_map):
@@ -840,7 +874,8 @@ def get_integral(integral, current_index, variable_map):
         random_upper{current_index}, {random_upper_size},
         numeric_lower{current_index}, {numeric_lower_size}, 
         numeric_upper{current_index}, {numeric_upper_size}, {inner_size},
-        {get_pdf_type(integral)}
+        {get_pdf_type(integral)},
+        {is_mean(integral['upper_limit'])}, {is_mean(integral['lower_limit'])}
     );
     '''
     # if past_index:
@@ -1004,19 +1039,35 @@ def input_generation(args):
     return default_input_generation(args)
 
 
+def get_required_output(args):
+    if args.output:
+        try:
+            output = literal_eval('[' + args.output + ']')
+            return str(output)
+        except:
+            print('Couldn\'t parse output. so, computing for all outputs.')
+
+    return None
+
+
 def process(outputs, paths_output, args):
     whole_block = ''
     probability_array = []
     eb_array = []
+
+    r_o = get_required_output(args)
+
     for index, possible_paths in enumerate(outputs):
-        block, eb = get_block_for_output(index, possible_paths, paths_output[index])
-        whole_block += block
-        probability_array.append(f'compute_probability_for_output_{index}')
-        eb_array.append(str(eb).replace('[', '{').replace(']', '}'))
+        if not r_o or r_o == paths_output[index]:
+            block, eb = get_block_for_output(index, possible_paths, paths_output[index])
+            whole_block += block
+            probability_array.append(f'compute_probability_for_output_{index}')
+            eb_array.append(str(eb).replace('[', '{').replace(']', '}'))
 
     out = cprog.replace('{{WHOLE_BLOCK}}', whole_block)
     out = out.replace('{{ARRAY}}', ', '.join(probability_array))
-    out = out.replace('{{PATHS_OUTPUT}}', ','.join(list(map(lambda x: '"' + x + '"', paths_output))))
+    out = out.replace('{{PATHS_OUTPUT}}', ','.join(list(
+        map(lambda x: '"' + x + '"', filter(lambda x: not r_o or r_o == x, paths_output)))))
     out = out.replace('{{EB}}', ', '.join(eb_array))
     out = out.replace('{{INPUT_SIZE}}', str(args.input_size))
     out = out.replace('{{INPUTS}}', input_generation(args))
