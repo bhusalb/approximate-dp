@@ -1,9 +1,9 @@
-folder,input_size,eps,delta,test,max_depth,avg_depth,min_depth,max_variables,avg_variables,min_variables,number_of_paths,number_of_outputs,max_conditions,avg_conditions,min_conditions,time,output
-svt_laplace_max,4,1,0,example_4.dip,3,2.6,2,5,3.8,2,5,5,4,2.8,1,1481.863237977028,"{ ""DP"": 1}"
-svt_laplace_max,2,1,0,example_2.dip,3,2.3333333333333335,2,3,2.6666666666666665,2,3,3,2,1.6666666666666667,1,26.560539484024048,"{ ""DP"": 1}"
-svt_laplace_max,3,1,0,example_3.dip,3,2.5,2,4,3.25,2,4,4,3,2.25,1,250.02498996257782,"{ ""DP"": 1}"
-svt_laplace_max,1,1,0,example_1.dip,2,2,2,2,2,2,2,2,1,1,1,1.9576174020767212,"{ ""DP"": 1}"
-svt_laplace_max,4,2,0,example_4.dip,3,2.6,2,5,3.8,2,5,5,4,2.8,1,1638.703109383583,"{ ""DP"": 1}"
-svt_laplace_max,2,2,0,example_2.dip,3,2.3333333333333335,2,3,2.6666666666666665,2,3,3,2,1.6666666666666667,1,32.38443100452423,"{ ""DP"": 1}"
-svt_laplace_max,3,2,0,example_3.dip,3,2.5,2,4,3.25,2,4,4,3,2.25,1,279.17181050777435,"{ ""DP"": 1}"
-svt_laplace_max,1,2,0,example_1.dip,2,2,2,2,2,2,2,2,1,1,1,1.5696306228637695,"{ ""DP"": 1}"
+folder,input_size,mapping,eps,delta,test,max_depth,avg_depth,min_depth,max_variables,avg_variables,min_variables,number_of_paths,number_of_outputs,max_conditions,avg_conditions,min_conditions,time,output
+svt_laplace_max,4,,1,0,example_4.dip,3,2.6,2,5,3.8,2,5,5,4,2.8,1,1481.863237977028,"{ ""DP"": 1}"
+svt_laplace_max,2,,1,0,example_2.dip,3,2.3333333333333335,2,3,2.6666666666666665,2,3,3,2,1.6666666666666667,1,26.560539484024048,"{ ""DP"": 1}"
+svt_laplace_max,3,,1,0,example_3.dip,3,2.5,2,4,3.25,2,4,4,3,2.25,1,250.02498996257782,"{ ""DP"": 1}"
+svt_laplace_max,1,,1,0,example_1.dip,2,2,2,2,2,2,2,2,1,1,1,1.9576174020767212,"{ ""DP"": 1}"
+svt_laplace_max,4,,0.5,0,example_4.dip,3,2.6,2,5,3.8,2,5,5,4,2.8,1,1638.703109383583,"{ ""DP"": 1}"
+svt_laplace_max,2,,0.5,0,example_2.dip,3,2.3333333333333335,2,3,2.6666666666666665,2,3,3,2,1.6666666666666667,1,32.38443100452423,"{ ""DP"": 1}"
+svt_laplace_max,3,,0.5,0,example_3.dip,3,2.5,2,4,3.25,2,4,4,3,2.25,1,279.17181050777435,"{ ""DP"": 1}"
+svt_laplace_max,1,,0.5,0,example_1.dip,2,2,2,2,2,2,2,2,1,1,1,1.5696306228637695,"{ ""DP"": 1}"

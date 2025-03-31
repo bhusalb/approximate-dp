@@ -1,0 +1,8 @@
+test,mapping,folder,eps,delta,max_depth,avg_depth,min_depth,max_variables,avg_variables,min_variables,number_of_paths,number_of_outputs,max_conditions,avg_conditions,min_conditions,time,output
+svt_3,input_5_svt3_01.txt,dipc,27,0,3,2.6666666666666665,2,6,4.333333333333333,2,6,6,5,3.3333333333333335,1,504.64675664901733,"{ ""DP"": -1}"
+svt_4,input_2_svt4.txt,dipc,0.54,0,3,2.3333333333333335,2,3,2.6666666666666665,2,3,3,2,1.6666666666666667,1,148.618865331014,"{ ""DP"": -1}"
+svt_5,input_2_svt5.txt,dipc,27,0,2,1.3333333333333333,1,3,2.6666666666666665,2,3,3,2,1.6666666666666667,1,1.406559149424235,"{ ""DP"": -1}"
+svt_6,input_3_svt6.txt,dipc,"0.72826086956521739130434782608695
+
+
+",0,3,2.75,2,4,4,4,8,8,3,3,3,286.4066183567047,"{ ""DP"": -1}"

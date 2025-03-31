@@ -565,15 +565,15 @@ int check_not_dp_for_an_pair(arb_t* probs, arb_t* probs_adj, int probs_size, arb
 
 
 char* input_to_string(int input[], int input_length) {
-    char* str_input = (char*)malloc((input_length + 1) * sizeof(char));
+    char* str_input = (char*)malloc((input_length + 1) * sizeof(char) * 2) ;
    
     for (int i = 0; i < input_length; i++) {
-        char tmp[3];
-        sprintf(tmp, "%d", input[i]);
+        char tmp[10];
+        sprintf(tmp, "%d,", input[i]);
         strcat(str_input, tmp);
     }
 
-    str_input[input_length] = '\0'; 
+    // str_input[input_length] = '\0'; 
     return str_input;
 }
 
@@ -608,7 +608,7 @@ int main(int argc, char *argv[]) {
     
     {{INPUTS}}
     
-    slong prec[] = { 32 };
+    slong prec[] = { 16, 32 };
     int prec_size = sizeof(prec) / sizeof(prec[0]);
 
     int (*compute_probability[])(arb_ptr, double, slong, double, int[]) = { {{ARRAY}} };
@@ -667,6 +667,9 @@ int main(int argc, char *argv[]) {
         
         is_not_dp = 0;
         for (int i = 0; i < total_pairs; i++) {
+            if (debug && !is_not_dp) {
+                print_input(inputs[input_pairs[i][0]], inputs[input_pairs[i][1]], input_length);
+            }
             is_not_dp = is_not_dp || check_not_dp_for_an_pair(probs[input_pairs[i][0]], probs[input_pairs[i][1]], compute_probability_size, arb_eps, delta, k, prec[prec_index], debug);
         }
         

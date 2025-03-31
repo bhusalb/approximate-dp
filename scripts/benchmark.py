@@ -59,15 +59,29 @@ characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} 
 eps = 0.5
 delta = 0.001
 
-# folders = ['svt_laplace', 'svt_laplace_max', 'svt', 'svt_max', 'nonpriv_svt', 'nonpriv_svt_max', 'noisy_max', 'noisy_min']
+folders = [
+    'svt_laplace',
+    'svt_laplace_max',
+    'svt',
+    'svt_max',
+    'svt_mix1',
+    'svt_mix2',
+    'svt_mix1_max',
+    'svt_mix2_max',
+    'nonpriv_svt',
+    'nonpriv_svt_max',
+    'noisy_max',
+    'noisy_min',
+    'mrange',
+]
 
-folders = ['svt_laplace', 'svt_laplace_max', ]
+# folders = ['svt_laplace', 'svt_laplace_max', ]
 
 # folders = ['nonpriv_svt', 'nonpriv_svt_max', ]
 
 # folders = ['svt', 'svt_max', ]
 
-with open(f'{root_dir}/results/result_laplace.csv', 'a', newline='') as outfile:
+with open(f'{root_dir}/results/all_data.csv', 'a', newline='') as outfile:
     # writer = csv.DictWriter(outfile, rows[0].keys())
     writer = None
 
@@ -77,9 +91,6 @@ with open(f'{root_dir}/results/result_laplace.csv', 'a', newline='') as outfile:
 
         for example in examples:
             i = int(example.split('.')[0].split('_')[-1])
-
-            if i not in [8,9]:
-                continue
             input_path = os.path.join(input_dir, f'inputs_{i}.json')
             output = dict(folder=folder, input_size=i, eps=eps, delta=delta, test=example)
             file_path = os.path.join(examples_dir, example)
@@ -101,9 +112,9 @@ with open(f'{root_dir}/results/result_laplace.csv', 'a', newline='') as outfile:
                 except:
                     output[f'time_{_type}'] = "TIMEOUT"
                     output[f'output_{_type}'] = "N/A"
+                print(output)
 
                 command_args['input_path'] = input_path
-            print(f'---{example}    time single {round(output["time_single"], 2)}---')
 
             if not writer:
                 writer = csv.DictWriter(outfile, fieldnames=output.keys())

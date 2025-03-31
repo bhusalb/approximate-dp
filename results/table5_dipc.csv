@@ -1,0 +1,11 @@
+Input,AdjTime,WritTime,o/p,RunTime,LineCount
+input_1_svt3_01.txt,0s,0s,0,54s,50
+input_2_svt3_01.txt,0s,0s,0,335s,259
+input_3_svt3_01.txt,0s,0s,0,2476s,1500
+input_4_svt3_01.txt,0s,4s,0,15177s,9305
+input_5_svt3_01.txt,0s,52s,1,7502s,60646
+input_1_svt3_01.txt,0s,0s,0,38s,33
+input_2_svt3_01.txt,0s,1s,0,90s,55
+input_3_svt3_01.txt,0s,0s,0,177s,81
+input_4_svt3_01.txt,0s,0s,0,325s,111
+input_5_svt3_01.txt,0s,0s,1,230s,145

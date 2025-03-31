@@ -1,0 +1,15 @@
+Input,eps,AdjTime,WritTime,o/p,RunTime,LineCount
+input_1_svt1.txt,1,0s,0s,0,52s,29
+input_2_svt1.txt,1,0s,0s,0,104s,141
+input_2_svt1_c2.txt,1,0s,0s,0,189s,198
+input_3_svt1.txt,1,0s,0s,0,558s,841
+input_3_svt1_c2.txt,1,0s,0s,0,946s,1219
+input_4_svt1.txt,1,0s,1s,0,2814s,5489
+input_4_svt1_c2.txt,1,0s,3s,0,4636s,8006
+input_1_svt1.txt,0.5,0s,0s,0,25s,29
+input_2_svt1.txt,0.5,0s,0s,0,106s,141
+input_2_svt1_c2.txt,0.5,0s,0s,0,187s,198
+input_3_svt1.txt,0.5,0s,1s,0,578s,841
+input_3_svt1_c2.txt,0.5,0s,0s,0,974s,1219
+input_4_svt1.txt,0.5,0s,1s,1,2850s,5489
+input_4_svt1_c2.txt,0.5,0s,3s,0,4875s,8006

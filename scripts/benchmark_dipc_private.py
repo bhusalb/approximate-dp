@@ -70,7 +70,7 @@ with open(f'{root_dir}/results/result_dipc_private_1.csv', 'a', newline='') as o
     # writer = csv.DictWriter(outfile, rows[0].keys())
     writer = None
 
-    for eps in [1, 2]:
+    for eps in [1, 0.5]:
 
         examples_dir = os.path.join(root_dir, 'examples', folder)
         examples = os.listdir(examples_dir)
