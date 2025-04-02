@@ -4,6 +4,18 @@ import csv
 import os
 import subprocess
 import json
+import signal
+import psutil
+
+
+def kill_process_by_name(process_name):
+    for proc in psutil.process_iter(attrs=['pid', 'name']):
+        if proc.info['name'] == process_name:
+            try:
+                os.kill(proc.info['pid'], signal.SIGTERM)  # Use SIGKILL if needed
+                print(f"Killed process {process_name} with PID {proc.info['pid']}")
+            except Exception as e:
+                print(f"Error killing process {process_name}: {e}")
 
 
 def run_command(command, env):
@@ -52,9 +64,9 @@ input_dir = os.path.join(root_dir, 'examples', 'inputs')
 main_script = os.path.join(root_dir, 'src', 'main.py')
 rows = []
 
-benchmark_time_template_single_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path}'''
-benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d {delta}'''
-characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize'''
+benchmark_time_template_single_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k {k}'''
+benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} -k {k}'''
+characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize -k {k}'''
 
 eps = 0.5
 delta = 0.001
@@ -81,7 +93,7 @@ folders = [
 
 # folders = ['svt', 'svt_max', ]
 
-with open(f'{root_dir}/results/all_data.csv', 'a', newline='') as outfile:
+with open(f'{root_dir}/results/new_all_data.csv', 'a', newline='') as outfile:
     # writer = csv.DictWriter(outfile, rows[0].keys())
     writer = None
 
@@ -95,7 +107,10 @@ with open(f'{root_dir}/results/all_data.csv', 'a', newline='') as outfile:
             output = dict(folder=folder, input_size=i, eps=eps, delta=delta, test=example)
             file_path = os.path.join(examples_dir, example)
 
-            command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta)
+            command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta, k=4)
+
+            if 'laplace' in folder:
+                command_args['k'] = 8
 
             _, characterization = run_command(characterization_template.format(**command_args), os.environ.copy())
             characterization = json.loads(characterization)
@@ -105,17 +120,21 @@ with open(f'{root_dir}/results/all_data.csv', 'a', newline='') as outfile:
             for _type, template in all_templates.items():
                 command = template.format(**command_args)
                 print(command)
-                try:
-                    mean_time, outputs = run_multiple_times(command, os.environ.copy(), 3)
-                    output[f'time_{_type}'] = mean_time
-                    output[f'output_{_type}'] = outputs[-1]
-                except:
+
+                if i >= 7 and _type == 'all':
                     output[f'time_{_type}'] = "TIMEOUT"
                     output[f'output_{_type}'] = "N/A"
-                print(output)
-
+                else:
+                    try:
+                        mean_time, outputs = run_multiple_times(command, os.environ.copy(), 3)
+                        output[f'time_{_type}'] = mean_time
+                        output[f'output_{_type}'] = outputs[-1]
+                    except:
+                        output[f'time_{_type}'] = "TIMEOUT"
+                        output[f'output_{_type}'] = "N/A"
+                        kill_process_by_name('temp_program')
                 command_args['input_path'] = input_path
-
+            print(output)
             if not writer:
                 writer = csv.DictWriter(outfile, fieldnames=output.keys())
                 writer.writeheader()
