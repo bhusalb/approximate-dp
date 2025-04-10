@@ -1,4 +1,3 @@
-
 INPUTSIZE 3;
 RANDOM TH = lap(eps/2, 0);
 OUTPUT = [0,0,0];

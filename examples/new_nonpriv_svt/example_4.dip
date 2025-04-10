@@ -1,0 +1,27 @@
+
+INPUTSIZE 4;
+NUMERIC TH = 0;
+OUTPUT = [0,0,0,0];
+    
+    RANDOM Q0 = gauss(eps/0.1, INPUT[0]);
+    IF Q0 < TH THEN {
+        OUTPUT[0] = 1;
+    }ELSE {
+        
+    RANDOM Q1 = gauss(eps/0.1, INPUT[1]);
+    IF Q1 < TH THEN {
+        OUTPUT[1] = 1;
+    }ELSE {
+        
+    RANDOM Q2 = gauss(eps/0.1, INPUT[2]);
+    IF Q2 < TH THEN {
+        OUTPUT[2] = 1;
+    }ELSE {
+        
+    RANDOM Q3 = gauss(eps/0.1, INPUT[3]);
+    IF Q3 < TH THEN {
+        OUTPUT[3] = 1;
+    }
+}
+}
+}

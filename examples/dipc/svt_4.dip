@@ -3,12 +3,12 @@ INPUTSIZE 2;
 RANDOM TH = lap(eps/4, 0);
 OUTPUT = [0,0];
     
-RANDOM Q0 = lap(eps/1.33333333, INPUT[0]);
+RANDOM Q0 = lap(eps/1.33333333333334, INPUT[0]);
 IF Q0 > TH THEN {
     OUTPUT[0] = 1;
 }ELSE {
         
-RANDOM Q1 = lap(eps/1.33333333, INPUT[1]);
+RANDOM Q1 = lap(eps/1.33333333333334, INPUT[1]);
 IF Q1 > TH THEN {
     OUTPUT[1] = 1;
 }

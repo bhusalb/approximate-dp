@@ -1,9 +1,9 @@
 INPUTSIZE 3;
-RANDOM TH = gauss(eps/4, 0);
+RANDOM TH = lap(eps/4, 0);
 OUTPUT = [0];
-RANDOM Q1 = gauss(eps/2, INPUT[0]);
-RANDOM Q2 = gauss(eps/2, INPUT[1]);
-RANDOM Q3 = gauss(eps/2, INPUT[2]);
+RANDOM Q1 = lap(eps/2, INPUT[0]);
+RANDOM Q2 = lap(eps/2, INPUT[1]);
+RANDOM Q3 = lap(eps/2, INPUT[2]);
 
 
 NUMERIC ONE = 1;

@@ -17,7 +17,7 @@ def run_command(command, env):
         env=env,
         stdout=subprocess.PIPE,
         preexec_fn=os.setsid,
-        timeout=1000,
+        timeout=10000,
         shell=True)
 
     execution_time = time.time() - start_time
@@ -53,23 +53,27 @@ examples = [
     'svt_3',
     'svt_4',
     'svt_5',
-    'svt_6'
+    'svt_6',
+    'nmax3'
 ]
 
 eps_list = [
-    Decimal(1) / Decimal(27),
-    Decimal(50) / Decimal(27),
-    Decimal(1) / Decimal(27),
-    Decimal(92) / Decimal(67)
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
 ]
 
-outputs = [
-    [0, 0, 0, 0, 1],
-    [0, 1],
-    [0, 1],
-    [1, 1, 0],
-]
+# outputs = [
+#     [0, 0, 0, 0, 1],
+#     [0, 1],
+#     [0, 1],
+#     [1, 1, 0],
+#     [-1]
+# ]
 
+assert len(examples) == len(eps_list)
 root_dir = os.path.join(os.path.dirname(__file__), '../')
 
 input_dir = os.path.join(root_dir, 'examples', 'dipc_inputs')
@@ -78,7 +82,9 @@ main_script = os.path.join(root_dir, 'src', 'main.py')
 
 rows = []
 
-template = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} --output {output} -k 12'''
+template_svt4 = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k 8 --prec 24'''
+
+template = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k 8'''
 # benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d {delta}'''
 characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize'''
 
@@ -105,9 +111,12 @@ with open(f'{root_dir}/results/result_dipc_non.csv', 'a', newline='') as outfile
         characterization = json.loads(characterization)
 
         output = output | characterization
-        command_args['output'] = (str(outputs[i]).replace(' ', ''))[1:-1]
+        # command_args['output'] = (str(outputs[i]).replace(' ', ''))[1:-1]
         command_args['input_path'] = input_path
-        command = template.format(**command_args)
+        if example == 'svt_4':
+            command = template_svt4.format(**command_args)
+        else:
+            command = template.format(**command_args)
         print(command)
         try:
             mean_time, _outputs = run_multiple_times(command, os.environ.copy(), 3)

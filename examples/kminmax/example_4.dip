@@ -1,0 +1,46 @@
+INPUTSIZE 4;
+OUTPUT = [0, 0];
+RANDOM Q0 = lap(eps/2, INPUT[0]);
+RANDOM MAX = Q0;
+RANDOM MIN = Q0;
+RANDOM Q1 = lap(eps/2, INPUT[1]);
+
+IF Q1 > MAX THEN {
+    IF Q1 > MIN THEN {
+        RANDOM MAX = Q1;
+    }
+} ELSE {
+    IF Q1 < MIN THEN {
+        RANDOM MIN = Q1;
+    }
+}
+
+RANDOM Q2 = lap(eps/2, INPUT[2]);
+
+IF Q2 > MIN THEN {
+    IF Q2 < MAX THEN {
+        OUTPUT[0] = 1;
+    }
+} ELSE {
+    IF Q2 > MAX THEN {
+        OUTPUT[0] = 0;
+    } ELSE {
+        RANDOM Q3 = lap(eps/2, INPUT[3]);
+        IF Q3 > MIN THEN {
+            IF Q3 < MAX THEN {
+                OUTPUT[1] = 1;
+            }
+        } ELSE {
+            IF Q3 > MAX THEN {
+                OUTPUT[1] = 0;
+            }
+        }
+    }
+}
+
+
+
+
+
+
+

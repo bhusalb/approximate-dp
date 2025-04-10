@@ -30,7 +30,7 @@ def get_for_if_block(i, n):
 #         '''
 #     else:
     template = '''
-    RANDOM Q{{INDEX}} = gauss(eps/2, INPUT[{{INDEX}}]);
+    RANDOM Q{{INDEX}} = gauss(eps/0.1, INPUT[{{INDEX}}]);
     IF Q{{INDEX}} {{SIGN}} TH THEN {
         OUTPUT[{{INDEX}}] = 1;
     }'''
@@ -65,7 +65,7 @@ def get_if_and_else_block(start, n, initial_n):
 
 root_dir = os.path.join(os.path.dirname(__file__), '../')
 
-examples_dir = os.path.join(root_dir, 'examples', 'nonpriv_svt' + ("_max" if args.max else ''))
+examples_dir = os.path.join(root_dir, 'examples', 'new_nonpriv_svt' + ("_max" if args.max else ''))
 
 for i in range(2, args.number + 1):
     initial_block = get_initial_block(i)

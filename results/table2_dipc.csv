@@ -1,9 +1,6 @@
 Input,AdjTime,WritTime,o/p,RunTime,LineCount
-input_5_svt3_01.txt,1s,64s,1,8060s,60646
-input_2_svt4.txt,0s,1s,1,140s,140
-input_2_svt5.txt,0s,0s,1,13s,65
-input_3_svt6.txt,1s,0s,1,1160s,1437
-input_3_nmax7.txt,0s,2s,1,599s,1588
-input_1_nmax8.txt,0s,0s,1,11s,34
-input_1_rr.txt,0s,,,
-input_1_nmax10.txt,0s,0s,1,11s,34
+input_5_svt3_01.txt,1s,51s,1,3146s,60647
+input_2_svt4.txt,0s,1s,1,80s,141
+input_2_svt5.txt,0s,0s,1,7s,66
+input_3_svt6.txt,0s,0s,1,526s,1438
+input_3_nmax7.txt,0s,1s,1,319s,1589

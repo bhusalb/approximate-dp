@@ -21,7 +21,7 @@ if args.max:
 
 def get_for_if_block(i):
     template = '''
-RANDOM Q{{INDEX}} = gauss(eps/2, INPUT[{{INDEX}}]);
+RANDOM Q{{INDEX}} = gauss(eps/4, INPUT[{{INDEX}}]);
 IF Q{{INDEX}} {{SIGN}} TH THEN {
     OUTPUT[{{INDEX}}] = 1;
 }'''
@@ -35,7 +35,7 @@ IF Q{{INDEX}} {{SIGN}} TH THEN {
 def get_initial_block(n):
     return f'''
 INPUTSIZE {n};
-RANDOM TH = gauss(eps/4, 0);
+RANDOM TH = gauss(eps/2, 0);
 OUTPUT = [{','.join(['0'] * n)}];
     '''
 

@@ -1,0 +1,8 @@
+INPUTSIZE 1;
+NUMERIC TH = 0;
+OUTPUT = [0];
+    
+RANDOM Q0 = gauss(eps/2, INPUT[0]);
+IF Q0 < TH THEN {
+    OUTPUT[0] = 1;
+}

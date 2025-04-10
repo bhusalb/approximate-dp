@@ -31,14 +31,29 @@ def handle_assignment(statement, path):
         path['variables'][statement[2][1]] = dict(type='NUMERIC', value=statement[3], name=statement[2][1])
 
     if statement[1] == 'RANDOM':
-        path['variables'][statement[2][1]] = dict(type='RANDOM', dist=statement[3][0], factor=statement[3][1],
-                                                  mean=get_value_by_index_or_var_name(statement[3][2], path),
-                                                  name=statement[2][1])
+
+        if statement[3][0] == 'VAR':
+            path['map'][statement[2][1]] = statement[3][1]
+        else:
+            path['variables'][statement[2][1]] = dict(type='RANDOM', dist=statement[3][0], factor=statement[3][1],
+                                                      mean=get_value_by_index_or_var_name(statement[3][2], path),
+                                                      name=statement[2][1])
+
+
+def modify_condition(path, condition):
+    condition = list(condition)
+    if condition[1][1] in path['map']:
+        condition[1] = ('VAR', path['map'][condition[1][1]])
+
+    if condition[3][1] in path['map']:
+        condition[3] = ('VAR', path['map'][condition[3][1]])
+
+    return tuple(condition)
 
 
 def handle_if(statement, program, index, args, path, paths):
     new_paths = [path]
-    path['conditions'].append(statement[1])
+    path['conditions'].append(modify_condition(path, statement[1]))
     handle_statement(statement[2], 0, args, path, new_paths)
     for _path in new_paths:
         if _path not in paths:
@@ -50,7 +65,7 @@ def handle_else(statement, program, index, args, path, paths):
     new_paths = [path]
     cmp_statement = copy.deepcopy(statement[1])
     cmp_statement[2] = flip_comparison(cmp_statement[2])
-    path['conditions'].append(cmp_statement)
+    path['conditions'].append(modify_condition(path, cmp_statement))
 
     if statement[0] == 'IFELSE':
         handle_statement(statement[3], 0, args, path, new_paths)
@@ -243,7 +258,7 @@ def build(program, args):
 
 
 def get_paths(program, args):
-    path = {'variables': dict(), 'input': None, 'output': None, 'conditions': []}
+    path = {'variables': dict(), 'input': None, 'output': None, 'conditions': [], 'map': dict()}
 
     paths = [path]
 

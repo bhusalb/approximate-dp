@@ -61,8 +61,8 @@ def p_output(p):
 def p_statement_random_variable(p):
     '''random_var_assignment : RANDOM variable EQUALS gaussfunc
           | RANDOM variable EQUALS lapfunc
+          | RANDOM variable EQUALS variable
     '''
-
     p[0] = ('assignment', 'RANDOM', p[2], p[4])
 
 

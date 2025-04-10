@@ -60,48 +60,60 @@ delta = 0
 
 # folders = ['svt_laplace', 'svt_laplace_max', 'svt', 'svt_max', 'nonpriv_svt', 'nonpriv_svt_max', 'noisy_max', 'noisy_min']
 
-folder = 'svt_laplace_max'
+folders = [
+    # 'svt_laplace_max',
+    'svt_laplace',
+    'noisy_max_laplace',
+    'noisy_min_laplace'
+]
 
 # folders = ['nonpriv_svt', 'nonpriv_svt_max', ]
 
 # folders = ['svt', 'svt_max', ]
 
-with open(f'{root_dir}/results/result_dipc_private_1.csv', 'a', newline='') as outfile:
+with open(f'{root_dir}/results/result_dipc_private.csv', 'a', newline='') as outfile:
     # writer = csv.DictWriter(outfile, rows[0].keys())
     writer = None
 
     for eps in [1, 0.5]:
+        for folder in folders:
+            examples_dir = os.path.join(root_dir, 'examples', folder)
+            examples = os.listdir(examples_dir)
 
-        examples_dir = os.path.join(root_dir, 'examples', folder)
-        examples = os.listdir(examples_dir)
+            for example in examples:
+                i = int(example.split('.')[0].split('_')[-1])
 
-        for example in examples:
-            i = int(example.split('.')[0].split('_')[-1])
-            input_path = os.path.join(input_dir, f'{i}.json')
-            output = dict(folder=folder, input_size=i, eps=eps, delta=delta, test=example)
-            file_path = os.path.join(examples_dir, example)
+                if i not in [1, 2, 3, 4]:
+                    continue
 
-            command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta)
+                if 'noisy' in folder and i != 3:
+                    continue
 
-            _, characterization = run_command(characterization_template.format(**command_args), os.environ.copy())
-            characterization = json.loads(characterization)
+                input_path = os.path.join(input_dir, f'{i}.json')
+                output = dict(folder=folder, input_size=i, eps=eps, delta=delta, test=example)
+                file_path = os.path.join(examples_dir, example)
 
-            output = output | characterization
-            command_args['input_path'] = input_path
-            command = template.format(**command_args)
-            print(command)
-            try:
-                mean_time, outputs = run_multiple_times(command, os.environ.copy(), 2)
-                output[f'time'] = mean_time
-                output[f'output'] = outputs[-1]
-            except:
-                output[f'time'] = "TIMEOUT"
-                output[f'output'] = "N/A"
+                command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta)
 
-            print(f'---{example}  time {output["time"]} output {output["output"]}---')
-            if not writer:
-                writer = csv.DictWriter(outfile, fieldnames=output.keys())
-                writer.writeheader()
-            writer.writerow(output)
+                _, characterization = run_command(characterization_template.format(**command_args), os.environ.copy())
+                characterization = json.loads(characterization)
+
+                output = output | characterization
+                command_args['input_path'] = input_path
+                command = template.format(**command_args)
+                print(command)
+                try:
+                    mean_time, outputs = run_multiple_times(command, os.environ.copy(), 2)
+                    output[f'time'] = mean_time
+                    output[f'output'] = outputs[-1]
+                except:
+                    output[f'time'] = "TIMEOUT"
+                    output[f'output'] = "N/A"
+
+                print(f'---{example}  time {output["time"]} output {output["output"]}---')
+                if not writer:
+                    writer = csv.DictWriter(outfile, fieldnames=output.keys())
+                    writer.writeheader()
+                writer.writerow(output)
 
 # rows.sort(key=lambda a: a['test'], reverse=False)

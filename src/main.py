@@ -29,6 +29,8 @@ def get_args():
     parser.add_argument('--characterize', '-c', action='store_true', required=False, default=False)
     parser.add_argument('--regular', '-r', action='store_true', required=False, default=False)
     parser.add_argument('--output', '-o', type=str, required=False, default=None)
+    parser.add_argument('--prec', '-p', type=int, required=False, default=None)
+    parser.add_argument('--epriv', '-ee', type=float, required=False, default=None)
 
     return parser.parse_args()
 
@@ -70,7 +72,7 @@ if __name__ == "__main__":
 
     if args.debug:
         # plot(graph)
-        mathematica.process(expressions, paths_output, args)
+        # mathematica.process(expressions, paths_output, args)
         pass
     clang = Clang('gcc', library_dirs=['flint'])
     clang.compile_binary('temp_program.c', 'temp_program')

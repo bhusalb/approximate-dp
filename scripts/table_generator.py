@@ -10,8 +10,50 @@ type_to_title = {
     'noisy_min': r'\NoisyMin',
     'noisy_max': r'\NoisyMax',
     'nonpriv_svt': r'\NonPrivAboveThreshold',
-    'nonpriv_svt_max': r'\NonPrivBelowThreshold'
+    'nonpriv_svt_max': r'\NonPrivBelowThreshold',
+    'kminmax': r'$k$-{\minmax}',
+    'svt_mix1': r'\MixOneAboveThreshold',
+    'svt_mix2': r'\MixTwoAboveThreshold',
+    'mrange': r'$m$-{\Range}',
+    'svt_laplace': r'\LaplaceAboveThreshold',
+    'svt_laplace_max': r'\LaplaceBelowThreshold',
+    'svt_mix1_max': r'\MixOneBelowThreshold',
+    'svt_mix2_max': r'\MixTwoBelowThreshold',
+    'svt_3': r'\LaplaceBelowThreshold-$3$',
+    'svt_4': r'\LaplaceBelowThreshold-$4$',
+    'svt_5': r'\LaplaceBelowThreshold-$5$',
+    'svt_6': r'\LaplaceBelowThreshold-$6$',
+    'nmax3': r'\NoisyMax-$7$',
+    'noisy_min_laplace': r'\LaplaceNoisyMin',
+    'noisy_max_laplace': r'\LaplaceNoisyMax',
+    'new_nonpriv_svt_max': r'\NonPrivBelowThreshold-$1$',
+    'new_nonpriv_svt': r'\NonPrivAboveThreshold-$1$'
 }
+
+examples_to_include = {
+    'svt': [2, 5, 24, 25],
+    'svt_max': [2, 5, 24, 25],
+    'noisy_min': [2, 3, 4],
+    'noisy_max': [2, 3, 4],
+    'nonpriv_svt': [3, 6],
+    'nonpriv_svt_max': [3, 6],
+    'kminmax': [3, 4],
+    'svt_mix1': [2, 5, 17],
+    'svt_mix2': [2, 5, 10],
+    'mrange': [1, 2, 3],
+    'svt_laplace': [2, 5, 11],
+    'svt_laplace_max': [2, 5, 11],
+    'svt_mix1_max': [2, 5, 17],
+    'svt_mix2_max': [2, 5, 11],
+    'noisy_min_laplace': [3, 4],
+    'noisy_max_laplace': [3, 4],
+    'new_nonpriv_svt_max': [5, 6],
+    'new_nonpriv_svt': [5, 6],
+}
+
+examples_to_include_table2 = [
+    'svt', 'svt_laplace', 'svt_mix1', 'noisy_max'
+]
 
 
 def get_required_fields(data, required_fields):
@@ -76,13 +118,13 @@ def format_field(value, field):
     if field == 'time_single' and value in ['TIMEOUT', r'$\timeout$']:
         return r'$\timeout$'
 
-    if field in ['time_single', 'avg_conditions', 'avg_depth']:
+    if field in ['time_single', 'avg_conditions', 'avg_depth', 'time']:
         return round(float(value), 2)
 
     return value
 
 
-master = read_csv(os.path.join(results_dir, f'result_optimal.csv'))
+master = read_csv(os.path.join(results_dir, f'new_all_data.csv'))
 
 interesting_fields = ['type', 'input_size', 'number_of_paths',
                       'avg_conditions', 'output_single', 'time_single', 'output_all', 'time_all', ]
@@ -95,28 +137,31 @@ writer.writeheader()
 master_rows = []
 for key in master:
     row = master[key]
-    if row['folder'].startswith('svt'):
-        if not (row['input_size'] in [1, 2, 3, 5, 23, 25] or row['input_size'] % 4 == 0):
-            continue
+    if not (row['input_size'] in examples_to_include[row['folder']]):
+        continue
 
     master_rows.append(format_row(row, interesting_fields))
 
 master_rows = sorted(master_rows, key=lambda x: (x['type'], x['input_size']))
 writer.writerows(master_rows)
 
-regular_data = read_csv(os.path.join(results_dir, f'result_unoptimized.csv'))
+regular_data = read_csv(os.path.join(results_dir, f'unoptimized_all_data.csv'))
 table_2_rows = []
 table_2_fields = ['type', 'input_size', ]
 
-mix_fields = ['time_single', 'max_depth', 'avg_depth']
+mix_fields = ['max_depth', 'avg_depth', 'time_single']
 combined_fields = []
-for field in mix_fields:
-    for _type in ['unoptimize', 'optimize']:
+for _type in ['unoptimize', 'optimize']:
+    for field in mix_fields:
         combined_field = f'{_type}-{field}'
         combined_fields.append(combined_field)
 
 for key in regular_data:
     raw_row = dict(unoptimize=regular_data[key], optimize=master[key])
+
+    if raw_row['unoptimize']['folder'] not in examples_to_include_table2:
+        continue
+
     row = get_required_fields(master[key], table_2_fields)
     for field in mix_fields:
         for _type in ['unoptimize', 'optimize']:
@@ -153,3 +198,65 @@ with open(os.path.join(results_dir, f'table_3.csv'), 'w') as fp:
     writer = csv.DictWriter(fp, fieldnames=table_3_required_fields)
     writer.writeheader()
     writer.writerows(table_3_rows)
+
+
+def format_row_dipc(row):
+    new_row = dict()
+    new_row['dipc_time'] = row['RunTime']
+    new_row['example'] = row['Input']
+
+    if 'eps' in row:
+        new_row['eps'] = row['eps']
+
+    return new_row
+
+
+dipc_non_priv = dict()
+dipc_priv = dict()
+
+table_4_rows = []
+
+table_4_required_fields = ['type', 'input_size', 'eps', 'dpic_time', 'time', 'factor', 'output']
+
+with open(os.path.join(results_dir, f'table2_dipc.csv'), 'r') as f:
+    reader = csv.DictReader(f)
+
+    for row in reader:
+        row = format_row_dipc(row)
+        dipc_non_priv[row['example']] = row
+
+with open(os.path.join(results_dir, f'table4_dipc.csv'), 'r') as f:
+    reader = csv.DictReader(f)
+
+    for row in reader:
+        row = format_row_dipc(row)
+        dipc_priv[(row['example'], row['eps'])] = row
+
+with open(os.path.join(results_dir, f'result_dipc_private.csv'), 'r') as f:
+    reader = csv.DictReader(f)
+
+    for row in reader:
+        row = format_row_new(row, row['folder'])
+        row['time'] = format_field(row['time'], 'time')
+        row['dpic_time'] = dipc_priv[(row['mapping'], row['eps'])]['dipc_time'][:-1]
+        row['factor'] = round(int(row['dpic_time']) / row['time'], 2)
+        new_dict = get_required_fields(row, table_4_required_fields)
+        table_4_rows.append(new_dict)
+
+with open(os.path.join(results_dir, f'result_dipc_non.csv'), 'r') as f:
+    reader = csv.DictReader(f)
+
+    for row in reader:
+        row = format_row_new(row, row['test'])
+        row['time'] = int(float(row['time']))
+        row['dpic_time'] = dipc_non_priv[row['mapping']]['dipc_time'][:-1]
+        row['input_size'] = row['mapping'].split('_')[1]
+        row['factor'] = round(int(row['dpic_time']) / row['time'], 2)
+        new_dict = get_required_fields(row, table_4_required_fields)
+        table_4_rows.append(new_dict)
+
+table_4_rows = sorted(table_4_rows, key=lambda r: (r['type'], r['input_size']))
+with open(os.path.join(results_dir, f'table_4.csv'), 'w') as fp:
+    writer = csv.DictWriter(fp, fieldnames=table_4_required_fields)
+    writer.writeheader()
+    writer.writerows(table_4_rows)

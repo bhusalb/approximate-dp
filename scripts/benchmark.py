@@ -69,22 +69,27 @@ benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d
 characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize -k {k}'''
 
 eps = 0.5
-delta = 0.001
+delta = 0.01
 
 folders = [
-    'svt_laplace',
-    'svt_laplace_max',
+    # 'svt_laplace',
+    # 'svt_laplace_max',
     'svt',
-    'svt_max',
-    'svt_mix1',
-    'svt_mix2',
-    'svt_mix1_max',
-    'svt_mix2_max',
-    'nonpriv_svt',
-    'nonpriv_svt_max',
-    'noisy_max',
-    'noisy_min',
-    'mrange',
+    # 'svt_max',
+    # 'svt_mix1',
+    # 'svt_mix2',
+    # 'svt_mix1_max',
+    # 'svt_mix2_max',
+    # 'nonpriv_svt',
+    # 'nonpriv_svt_max',
+    # 'noisy_max',
+    # 'noisy_min',
+    # 'mrange',
+    # 'kminmax',
+    # 'noisy_max_laplace',
+    # 'noisy_min_laplace',
+    # 'new_nonpriv_svt',
+    # 'new_nonpriv_svt_max'
 ]
 
 # folders = ['svt_laplace', 'svt_laplace_max', ]
@@ -103,13 +108,17 @@ with open(f'{root_dir}/results/new_all_data.csv', 'a', newline='') as outfile:
 
         for example in examples:
             i = int(example.split('.')[0].split('_')[-1])
+
+            if i < 23:
+                continue
+
             input_path = os.path.join(input_dir, f'inputs_{i}.json')
             output = dict(folder=folder, input_size=i, eps=eps, delta=delta, test=example)
             file_path = os.path.join(examples_dir, example)
 
             command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta, k=4)
 
-            if 'laplace' in folder:
+            if 'laplace' in folder or 'mix' in folder:
                 command_args['k'] = 8
 
             _, characterization = run_command(characterization_template.format(**command_args), os.environ.copy())
@@ -121,7 +130,7 @@ with open(f'{root_dir}/results/new_all_data.csv', 'a', newline='') as outfile:
                 command = template.format(**command_args)
                 print(command)
 
-                if i >= 7 and _type == 'all':
+                if i >= 8 and _type == 'all':
                     output[f'time_{_type}'] = "TIMEOUT"
                     output[f'output_{_type}'] = "N/A"
                 else:
@@ -137,7 +146,7 @@ with open(f'{root_dir}/results/new_all_data.csv', 'a', newline='') as outfile:
             print(output)
             if not writer:
                 writer = csv.DictWriter(outfile, fieldnames=output.keys())
-                writer.writeheader()
+                # writer.writeheader()
             writer.writerow(output)
 
 # rows.sort(key=lambda a: a['test'], reverse=False)

@@ -1,7 +1,0 @@
-INPUTSIZE 1;
-RANDOM TH = gauss(eps/1, 0);
-OUTPUT = [0];
-RANDOM Q1 = gauss(eps/2, INPUT[0]);
-IF Q1 > TH THEN {
-    OUTPUT[0] = 1;
-}

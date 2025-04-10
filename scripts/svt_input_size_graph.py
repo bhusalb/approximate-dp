@@ -4,6 +4,7 @@ import argparse
 import matplotlib.pyplot as plt
 
 from matplotlib.ticker import MaxNLocator
+
 plt.rcParams.update({
     # "text.usetex": True,
     "font.family": "sans-serif"
@@ -14,23 +15,32 @@ parser.add_argument('--all', '-a', action='store_true', required=False, default=
 
 type_to_title = {
     'svt_max': r'$\text{SVT-Gauss-Le}$',
+    'svt_laplace_max': r'$\text{SVT-Laplace-Le}$',
+    'svt_laplace': r'$\text{SVT-Laplace}$',
     # 'noisy_min': 'Noisy Min',
     # 'noisy_max': 'Noisy Max',
-    'svt': r'$\text{SVT-Gauss}$'
+    'svt': r'$\text{SVT-Gauss}$',
+    'svt_mix1': r'$\text{SVT-Mix1}$',
+    'svt_mix2': r'$\text{SVT-Mix2}$',
 }
 
 type_to_marker = {
-    'svt_max': 'o',
+    'svt_mix2': 'o',
+    'svt_mix1': 'o',
+    'svt_laplace': '^',
+
     # 'noisy_min': 'Noisy Min',
     # 'noisy_max': 'Noisy Max',
     'svt': '^'
 }
 
 type_to_linestyle = {
-    'svt_max': '-',
+    'svt_mix2': '-',
     # 'noisy_min': 'Noisy Min',
     # 'noisy_max': 'Noisy Max',
-    'svt': '-.'
+    'svt': '-.',
+    'svt_mix1': '--',
+    'svt_laplace': '-.',
 }
 
 args = parser.parse_args()
@@ -50,9 +60,9 @@ all_suffix = ''
 if args.all:
     all_suffix = '_all'
 
-folders = ['svt', 'svt_max']
+folders = ['svt', 'svt_laplace', 'svt_mix1']
 
-data = read_csv(os.path.join(root_dir, 'results', f'result_optimal.csv'))
+data = read_csv(os.path.join(root_dir, 'results', f'new_all_data.csv'))
 for folder in folders:
 
     filtered_data = [row for row in data if row['folder'] == folder]

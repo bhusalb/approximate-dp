@@ -1,0 +1,70 @@
+INPUTSIZE 5;
+RANDOM TH = lap(eps/4, 0);
+OUTPUT = [0];
+RANDOM Q1 = lap(eps/2, INPUT[0]);
+RANDOM Q2 = lap(eps/2, INPUT[1]);
+RANDOM Q3 = lap(eps/2, INPUT[2]);
+RANDOM Q4 = lap(eps/2, INPUT[3]);
+RANDOM Q5 = lap(eps/2, INPUT[4]);
+
+IF Q1 > Q2 THEN {
+    IF Q1 > Q3 THEN {
+        IF Q1 > Q4 THEN {
+            IF Q1 > Q5 THEN {
+                OUTPUT[0] = 0;
+            } ELSE {
+                OUTPUT[0] = 4;
+            }
+        } ELSE {
+            IF Q4 > Q5 THEN {
+                OUTPUT[0] = 3;
+            } ELSE {
+                OUTPUT[0] = 4;
+            }
+        }
+    } ELSE {
+        IF Q3 > Q4 THEN {
+            IF Q3 > Q5 THEN {
+                OUTPUT[0] = 2;
+            } ELSE {
+                OUTPUT[0] = 4;
+            }
+        } ELSE {
+            IF Q4 > Q5 THEN {
+                OUTPUT[0] = 3;
+            } ELSE {
+                OUTPUT[0] = 4;
+            }
+        }
+    }
+} ELSE {
+    IF Q2 > Q3 THEN {
+        IF Q2 > Q4 THEN {
+            IF Q2 > Q5 THEN {
+                OUTPUT[0] = 1;
+            } ELSE {
+                OUTPUT[0] = 4;
+            }
+        } ELSE {
+            IF Q4 > Q5 THEN {
+                OUTPUT[0] = 3;
+            } ELSE {
+                OUTPUT[0] = 4;
+            }
+        }
+    } ELSE {
+        IF Q3 > Q4 THEN {
+            IF Q3 > Q5 THEN {
+                OUTPUT[0] = 2;
+            } ELSE {
+                OUTPUT[0] = 4;
+            }
+        } ELSE {
+            IF Q4 > Q5 THEN {
+                OUTPUT[0] = 3;
+            } ELSE {
+                OUTPUT[0] = 4;
+            }
+        }
+    }
+}

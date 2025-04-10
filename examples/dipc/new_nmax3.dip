@@ -1,0 +1,39 @@
+INPUTSIZE 3;
+RANDOM TH = lap(eps/4, 0);
+OUTPUT = [0];
+RANDOM Q1 = lap(eps/2, INPUT[0]);
+RANDOM Q2 = lap(eps/2, INPUT[1]);
+RANDOM Q3 = lap(eps/2, INPUT[2]);
+
+NUMERIC ZERO = 0;
+NUMERIC ONE = 1;
+
+IF Q1 > Q2 THEN {
+    IF Q1 > Q3 THEN {
+        IF Q1 < ZERO THEN {
+            OUTPUT[0] = 0;
+        } ELSE {
+            OUTPUT[0] = 1;
+        }
+    } ELSE {
+        IF Q2 < ZERO THEN {
+            OUTPUT[0] = 0;
+        } ELSE {
+            OUTPUT[0] = 1;
+        }
+    }
+} ELSE {
+    IF Q2 > Q3 THEN {
+        IF Q2 < ZERO THEN {
+            OUTPUT[0] = 0;
+        } ELSE {
+            OUTPUT[0] = 1;
+        }
+    } ELSE {
+        IF Q3 < ZERO THEN {
+            OUTPUT[0] = 0;
+        } ELSE {
+            OUTPUT[0] = 1;
+        }
+    }
+}
