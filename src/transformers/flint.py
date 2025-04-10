@@ -595,6 +595,8 @@ int main(int argc, char *argv[]) {
     int debug = 0;
     int k;
     double D = 1;
+    
+    double epriv = -1;
 
     for (int i = 1; i < argc; i++)
     {
@@ -608,6 +610,8 @@ int main(int argc, char *argv[]) {
             debug = 1;
         if (!strcmp(argv[i], "-D"))
             D = (double) atof(argv[i+1]);
+        if (!strcmp(argv[i], "-epriv"))
+            epriv = (double) atof(argv[i+1]);
     }
     
     if (debug) {
@@ -625,7 +629,12 @@ int main(int argc, char *argv[]) {
         
     arb_t arb_eps;
     arb_init(arb_eps);
-    arb_set_d(arb_eps, eps * D);
+    
+    if (epriv > 0) {
+        arb_set_d(arb_eps, epriv);
+    } else {
+        arb_set_d(arb_eps, eps * D);
+    }
     
     char paths_output[][1000] = { {{PATHS_OUTPUT}} }; 
     int is_dp = 1;

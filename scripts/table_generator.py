@@ -51,6 +51,17 @@ examples_to_include = {
     'new_nonpriv_svt': [5, 6],
 }
 
+table_1_order = [
+    'svt', 'new_nonpriv_svt',
+    'svt_max', 'new_nonpriv_svt_max',
+    'svt_laplace', 'svt_laplace_max',
+    'svt_mix1', 'svt_mix1_max',
+    'svt_mix2', 'svt_mix2_max',
+    'noisy_max', 'noisy_min',
+    'noisy_max_laplace', 'noisy_min_laplace',
+    'mrange', 'kminmax',
+]
+
 examples_to_include_table2 = [
     'svt', 'svt_laplace', 'svt_mix1', 'noisy_max'
 ]
@@ -127,7 +138,7 @@ def format_field(value, field):
 master = read_csv(os.path.join(results_dir, f'new_all_data.csv'))
 
 interesting_fields = ['type', 'input_size', 'number_of_paths',
-                      'avg_conditions', 'output_single', 'time_single', 'output_all', 'time_all', ]
+                      'avg_conditions', 'avg_depth', 'output_single', 'time_single', 'output_all', 'time_all', ]
 
 fp = open(os.path.join(results_dir, f'table_1.csv'), 'w')
 

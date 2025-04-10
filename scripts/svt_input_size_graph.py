@@ -60,7 +60,7 @@ all_suffix = ''
 if args.all:
     all_suffix = '_all'
 
-folders = ['svt', 'svt_laplace', 'svt_mix1']
+folders = ['svt_laplace', 'svt_mix1', 'svt', ]
 
 data = read_csv(os.path.join(root_dir, 'results', f'new_all_data.csv'))
 for folder in folders:

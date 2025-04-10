@@ -64,18 +64,19 @@ input_dir = os.path.join(root_dir, 'examples', 'inputs')
 main_script = os.path.join(root_dir, 'src', 'main.py')
 rows = []
 
-benchmark_time_template_single_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k {k}'''
-benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} -k {k}'''
-characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize -k {k}'''
+benchmark_time_template_single_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k {k} --epriv {epriv}'''
+benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} -k {k} --epriv {epriv}'''
+characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize -k {k} --epriv {epriv}'''
 
 eps = 0.5
 delta = 0.01
+epriv = 1.24
 
 folders = [
     # 'svt_laplace',
     # 'svt_laplace_max',
     'svt',
-    # 'svt_max',
+    'svt_max',
     # 'svt_mix1',
     # 'svt_mix2',
     # 'svt_mix1_max',
@@ -109,14 +110,14 @@ with open(f'{root_dir}/results/new_all_data.csv', 'a', newline='') as outfile:
         for example in examples:
             i = int(example.split('.')[0].split('_')[-1])
 
-            if i < 23:
-                continue
-
             input_path = os.path.join(input_dir, f'inputs_{i}.json')
             output = dict(folder=folder, input_size=i, eps=eps, delta=delta, test=example)
             file_path = os.path.join(examples_dir, example)
 
-            command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta, k=4)
+            command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta, k=4, epriv=eps)
+
+            if folder in ['svt', 'svt_max', 'svt_mix1', 'svt_mix2', 'svt_mix1_max', 'svt_mix2_max']:
+                command_args['epriv'] = epriv
 
             if 'laplace' in folder or 'mix' in folder:
                 command_args['k'] = 8
