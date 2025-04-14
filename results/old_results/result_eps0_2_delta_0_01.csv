@@ -1,7 +1,0 @@
-test,time,output
-example_1.dip,1.5697840054829915,"{ ""DP"": 1}"
-example_2.dip,3.2269951502482095,"{ ""DP"": 1}"
-example_3.dip,24.16615621248881,"{ ""DP"": 1}"
-example_4.dip,110.12049333254497,"{ ""DP"": 1}"
-example_5.dip,359.0621207555135,"{ ""DP"": 1}"
-example_6.dip,TIMEOUT,

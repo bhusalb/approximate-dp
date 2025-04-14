@@ -1,0 +1,26 @@
+INPUTSIZE 1;
+
+OUTPUT = [0];
+
+RANDOM HIGH = lap(eps/4, 1);
+RANDOM LOW = lap(eps/4, 0);
+
+RANDOM Q1 = lap(eps/2, INPUT[0]);
+
+IF Q1 > LOW THEN {
+    IF Q1 < HIGH THEN {
+        OUTPUT[0] = 1;
+    }
+} ELSE {
+    IF Q1 > LOW THEN {
+        IF Q1 > HIGH THEN {
+            OUTPUT[0] = 0;
+        }
+    } ELSE {
+        IF Q1 < LOW THEN {
+            IF Q1 < HIGH THEN {
+                OUTPUT[0] = 0;
+            }
+        }
+    }
+}

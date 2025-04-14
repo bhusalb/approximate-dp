@@ -10,3 +10,5 @@ src/core/parser.out
 src/core/parsetab.py
 result.csv
 results/old_results
+_results
+_scripts

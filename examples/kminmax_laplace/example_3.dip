@@ -1,9 +1,9 @@
 INPUTSIZE 3;
 OUTPUT = [0];
-RANDOM Q0 = gauss(eps/2, INPUT[0]);
+RANDOM Q0 = lap(eps/2, INPUT[0]);
 RANDOM MAX = Q0;
 RANDOM MIN = Q0;
-RANDOM Q1 = gauss(eps/2, INPUT[1]);
+RANDOM Q1 = lap(eps/2, INPUT[1]);
 
 IF Q1 > MAX THEN {
     IF Q1 > MIN THEN {
@@ -15,7 +15,7 @@ IF Q1 > MAX THEN {
     }
 }
 
-RANDOM Q2 = gauss(eps/2, INPUT[2]);
+RANDOM Q2 = lap(eps/2, INPUT[2]);
 
 IF Q2 > MIN THEN {
     IF Q2 < MAX THEN {

@@ -1,0 +1,36 @@
+INPUTSIZE 3;
+RANDOM TH0 = lap(eps/2, 0);
+OUTPUT = [0,0,0];
+
+RANDOM Q0 = lap(eps/4, INPUT[0]);
+IF Q0 > TH0 THEN {
+    OUTPUT[0] = 1;
+    RANDOM TH1 = lap(eps/2, 0);
+    RANDOM Q1 = lap(eps/4, INPUT[1]);
+    IF Q1 > TH1 THEN {
+        OUTPUT[1] = 1;
+    } ELSE {
+        RANDOM TH2 = lap(eps/2, 0);
+        RANDOM Q2 = lap(eps/4, INPUT[2]);
+        IF Q2 > TH2 THEN {
+            OUTPUT[2] = 1;
+        }
+    }
+} ELSE {
+    RANDOM Q11 = lap(eps/4, INPUT[1]);
+    RANDOM TH11 = lap(eps/2, 0);
+    IF Q11 > TH11 THEN {
+       OUTPUT[1] = 1;
+       RANDOM Q22 = lap(eps/4, INPUT[2]);
+       RANDOM TH22 = lap(eps/2, 0);
+        IF Q22 > TH22 THEN {
+            OUTPUT[2] = 1;
+        }
+    } ELSE {
+        RANDOM Q23 = lap(eps/4, INPUT[2]);
+        RANDOM TH23 = lap(eps/2, 0);
+        IF Q23 > TH23 THEN {
+            OUTPUT[2] = 1;
+        }
+    }
+}

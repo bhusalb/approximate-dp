@@ -1,6 +1,0 @@
-test,max_depth,avg_depth,min_depth,max_variables,avg_variables,min_variables,number_of_paths,number_of_outputs,max_conditions,avg_conditions,min_conditions
-example_4.dip,4,3,2,4,4,4,8,4,3,3,3
-example_5.dip,5,3.5,2,5,5,5,16,5,4,4,4
-example_6.dip,6,4,2,6,6,6,32,6,5,5,5
-example_2.dip,2,2,2,2,2,2,2,2,1,1,1
-example_3.dip,3,2.5,2,3,3,3,4,3,2,2,2

@@ -130,7 +130,7 @@ double calculate_error_bound(float k, int eb[2]) {
     return eb[0] * gaussian_error_bound(k) + eb[1] * laplace_error_bound(k);
 }
 
-int manhattan_distance(const int *vec1, const int *vec2, size_t length) {
+int mdistance(const int *vec1, const int *vec2, size_t length) {
     int distance = 0;
     for (size_t i = 0; i < length; ++i) {
         distance += abs(vec1[i] - vec2[i]);
@@ -1000,7 +1000,7 @@ def default_input_generation(args):
     int total_pairs = 0;
     for (int i = 0; i < total_inputs; i++) {
         for (int j = 0; j < total_inputs; j++) {
-            if (i != j && manhattan_distance(inputs[i], inputs[j], input_length) <= 1) {
+            if (i != j) {
                 input_pairs[total_pairs][0] = i;
                 input_pairs[total_pairs][1] = j;
                 total_pairs++;
