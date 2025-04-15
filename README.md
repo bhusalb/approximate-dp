@@ -1,7 +1,7 @@
 
 # DpApprox 
 
-An automated and integrated tool for proving and disproving Differential Privacy with Gaussian Distribution and Laplace Distributions.
+An automated and integrated tool for proving and disproving Differential Privacy with gaussian distributions and laplace distributions.
 
 # Install via Docker
 Due to the multiple dependencies of this project, it is much easier to install inside a docker container. 
@@ -48,7 +48,7 @@ Run `python3 src/main.py -f [FILE] -e [eps] -d [delta]` to start analyzing `[FIL
 ### Writing Your Own Algorithm
 
 Most of the syntax in DpApprox is the very simple: 
-1. Program must INPUT_SIZE constant and OUTPUT array.
+1. Program must have INPUT_SIZE constant and OUTPUT array.
 
 2. You can define two types of variables, NUMERIC and RANDOM variables. 
 
