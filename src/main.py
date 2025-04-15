@@ -20,17 +20,20 @@ def read_file(file_name):
 def get_args():
     parser = argparse.ArgumentParser(description='Approx DP')
     parser.add_argument('--file', '-f', type=str, required=True)
-    parser.add_argument('--eps', '-e', type=Decimal, required=True)
-    parser.add_argument('--delta', '-d', type=float, required=False)
-    parser.add_argument('--deps', '-D', type=float, required=False, default=1)
-    parser.add_argument('--k', '-k', type=int, required=False, default=4)
-    parser.add_argument('--input', '-i', type=str, required=False, default=None)
+    parser.add_argument('--eps', '-e', type=Decimal, required=True, help='The value of epsilon.')
+    parser.add_argument('--delta', '-d', type=float, required=False, help='The value of delta.')
+    parser.add_argument('--deps', '-D', type=float, required=False, default=1, help='The value of D.')
+    parser.add_argument('--k', '-k', type=int, required=False, default=4, help='The value of thr.')
+    parser.add_argument('--input', '-i', type=str, required=False, default=None,
+                        help='The file path for adjacent pairs.')
     parser.add_argument('--debug', '-dd', action='store_true', required=False, default=False)
     parser.add_argument('--characterize', '-c', action='store_true', required=False, default=False)
     parser.add_argument('--regular', '-r', action='store_true', required=False, default=False)
-    parser.add_argument('--output', '-o', type=str, required=False, default=None)
-    parser.add_argument('--prec', '-p', type=int, required=False, default=None)
-    parser.add_argument('--epriv', '-ee', type=float, required=False, default=None)
+    parser.add_argument('--output', '-o', type=str, required=False, default=None,
+                        help='Check for the particular output.')
+    parser.add_argument('--prec', '-p', type=int, required=False, default=None, help='The prec for the computation.')
+    parser.add_argument('--epriv', '-ee', type=float, required=False, default=None,
+                        help='The value of the epsilon priv.')
 
     return parser.parse_args()
 
@@ -74,8 +77,13 @@ if __name__ == "__main__":
         # plot(graph)
         # mathematica.process(expressions, paths_output, args)
         pass
-    clang = Clang('gcc', library_dirs=['flint'])
-    clang.compile_binary('temp_program.c', 'temp_program')
+
+    if sys.platform != 'Darwin':
+        libs = ['flint', 'm']
+    else:
+        libs = ['flint']
+    clang = Clang('gcc')
+    clang.compile_binary('temp_program.c', 'temp_program', library_dirs=libs)
     clang.output = 'temp_program'
     cagrs = {'eps': args.eps, 'delta': args.delta, 'k': args.k, 'D': args.deps}
     if args.debug:
