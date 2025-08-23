@@ -1,14 +1,13 @@
 # Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions
 
 <p align="center">
-<a href="https://doi.org/10.5281/zenodo.16930792"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.16930793.svg" alt="DOI"></a>
+    [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16930793.svg)](https://doi.org/10.5281/zenodo.16930793)
 </p>
 
 
-This repository contains the artifact for our CCS 2025 paper:  
-"Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions."
+This repository contains the artifact for CCS 2025 paper "Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions."
 
-The tool, DpApprox, automatically verifies whether algorithms written in ourlang are:
+The tool, DpApprox, automatically verifies whether algorithms written in DiPGauss are:
 - Differentially private
 - Not differentially private
 - Or unresolved (inconclusive)
@@ -28,26 +27,14 @@ You can access the artifact in multiple ways:
     git clone https://github.com/bhusalb/approximate-dp.git
     cd approximate-dp
 
-- Zenodo (archived release for CCS 2025): [DOI link here]
+- Zenodo (archived release for CCS 2025): [DiPApprox Tool](https://doi.org/10.5281/zenodo.16930793)
 
-- DockerHub (pre-built image) (optional if available):
+
+- DockerHub (pre-built image):
     docker pull bhusalb/dpapprox
 
 ---
 
-## Requirements
-
-- Hardware:
-  - Tool: 4 GB RAM
-  - Benchmarking: 16 GB RAM
-
-- Software:
-  - Unix-like environment (recommended)
-  - Docker
-  - Git
-  - FLINT library
-
----
 
 ## Installation
 
