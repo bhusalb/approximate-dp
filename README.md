@@ -1,8 +1,6 @@
 # Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions
 
-<p align="center">
-    [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16930793.svg)](https://doi.org/10.5281/zenodo.16930793)
-</p>
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16930793.svg)](https://doi.org/10.5281/zenodo.16930793)
 
 
 This repository contains the artifact for CCS 2025 paper "Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions."
