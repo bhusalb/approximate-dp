@@ -1,7 +1,7 @@
 # Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions
 
 <p align="center">
-<a href="https://10.5281/zenodo.16930793"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.16930793.svg" alt="DOI"></a>
+<a href="https://doi.org/10.5281/zenodo.16930792"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.16930793.svg" alt="DOI"></a>
 </p>
 
 
