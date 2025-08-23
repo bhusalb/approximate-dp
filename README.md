@@ -52,9 +52,11 @@ You can access the artifact in multiple ways:
 ## Installation
 
 Build the Docker container:
+
     docker build . -t dpapprox
 
 Run the container:
+
     docker run --rm -it dpapprox
 
 ---
@@ -62,9 +64,11 @@ Run the container:
 ## Basic Usage
 
 Check options:
+
     python3 src/main.py --help
 
 Example: analyze examples/svt/example_1.dip
+
     python3 src/main.py -f examples/svt/example_1.dip -e 0.5
     # Output: { "DP": 1 }
 
