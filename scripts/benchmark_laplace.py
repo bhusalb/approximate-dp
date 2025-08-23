@@ -6,7 +6,7 @@ import os
 import subprocess
 import json
 from decimal import *
-
+import sys
 import psutil
 
 getcontext().prec = 32
@@ -116,10 +116,10 @@ main_script = os.path.join(root_dir, 'src', 'main.py')
 
 rows = []
 
-template_svt4 = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k 8 --prec 24'''
+template_svt4 = '''{python} {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k 8 --prec 24'''
 
-template = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k 8'''
-characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize'''
+template = '''{python} {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k 8'''
+characterization_template = '''{python} {main} -f {file_path} -e {eps} -d {delta} --characterize'''
 
 delta = 0
 
@@ -140,7 +140,7 @@ with open(f'{root_dir}/results/laplace_data.csv', 'a', newline='') as outfile:
                 output = dict(folder=folder, eps=eps, delta=delta, test=example)
                 file_path = os.path.join(examples_dir, f'{example}.dip')
 
-                command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta)
+                command_args = dict(python=sys.executable, main=main_script, file_path=file_path, eps=eps, delta=delta)
 
                 _, characterization = run_command(characterization_template.format(**command_args), os.environ.copy())
                 characterization = json.loads(characterization)

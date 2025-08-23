@@ -5,6 +5,7 @@ import subprocess
 import json
 import signal
 import psutil
+import sys
 
 
 def kill_process_by_name(process_name):
@@ -63,9 +64,9 @@ input_dir = os.path.join(root_dir, 'examples', 'inputs')
 main_script = os.path.join(root_dir, 'src', 'main.py')
 rows = []
 
-benchmark_time_template_single_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k {k} --regular'''
-benchmark_time_template_all_inputs = '''python {main} -f {file_path} -e {eps} -d {delta} -k {k} --regular'''
-characterization_template = '''python {main} -f {file_path} -e {eps} -d {delta} --characterize -k {k} --regular'''
+benchmark_time_template_single_inputs = '''{python} {main} -f {file_path} -e {eps} -d {delta} --input {input_path} -k {k} --regular'''
+benchmark_time_template_all_inputs = '''{python} {main} -f {file_path} -e {eps} -d {delta} -k {k} --regular'''
+characterization_template = '''{python} {main} -f {file_path} -e {eps} -d {delta} --characterize -k {k} --regular'''
 
 eps = 0.5
 delta = 0.01
@@ -96,7 +97,7 @@ with open(f'{root_dir}/results/unoptimized_data.csv', 'a', newline='') as outfil
             output = dict(folder=folder, input_size=i, eps=eps, delta=delta, test=example)
             file_path = os.path.join(examples_dir, example)
 
-            command_args = dict(main=main_script, file_path=file_path, eps=eps, delta=delta, k=4)
+            command_args = dict(python=sys.executable, main=main_script, file_path=file_path, eps=eps, delta=delta, k=4)
 
             if 'laplace' in folder or 'mix' in folder:
                 command_args['k'] = 8
