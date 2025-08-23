@@ -22,6 +22,7 @@ It is implemented in Python and C++, and leverages:
 You can access the artifact in multiple ways:
 
 - GitHub (latest development version):
+  
     git clone https://github.com/bhusalb/approximate-dp.git
     cd approximate-dp
 
