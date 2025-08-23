@@ -22,18 +22,19 @@ It is implemented in Python and C++, and leverages:
 You can access the artifact in multiple ways:
 
 - GitHub (latest development version):
-  
+    ```
     git clone https://github.com/bhusalb/approximate-dp.git
+
     cd approximate-dp
+    ```
 
 - Zenodo (archived release for CCS 2025): [DiPApprox Tool](https://doi.org/10.5281/zenodo.16930793)
 
 
 - DockerHub (pre-built image):
+    ```
     docker pull bhusalb/dpapprox
-
----
-
+    ```
 
 ## Installation
 
