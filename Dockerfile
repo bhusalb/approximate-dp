@@ -13,5 +13,5 @@ RUN apt install -y python3-pip git
 RUN git clone https://github.com/flintlib/flint.git
 RUN cd flint && ./bootstrap.sh && ./configure && make -j 4 && make install
 RUN cd /home/ubuntu/approx-dp/ && pip3 install -r requirements.txt
-ENV LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/usr/local/lib/
 CMD ["/bin/bash"]

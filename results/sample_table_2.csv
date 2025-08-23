@@ -1,0 +1,15 @@
+type,input_size,unoptimize-max_depth,unoptimize-avg_depth,unoptimize-time_single,optimize-max_depth,optimize-avg_depth,optimize-time_single
+\BelowThreshold,1,2,2.0,1.55,2,2.0,1.28
+\BelowThreshold,2,3,2.67,4.25,3,2.3,1.5
+\BelowThreshold,3,4,3.25,$\timeout$,3,2.5,2.35
+\BelowThreshold,4,5,3.8,$\timeout$,3,2.6,3.8
+\BelowThreshold,5,6,4.33,$\timeout$,3,2.7,6.1
+\MixOneBelowThreshold,1,2,2.0,1.35,2,2.0,1.32
+\MixOneBelowThreshold,2,3,2.67,7.06,3,2.3,2.9
+\MixOneBelowThreshold,3,4,3.25,$\timeout$,3,2.5,7.49
+\MixOneBelowThreshold,4,5,3.8,$\timeout$,3,2.6,12.32
+\MixOneBelowThreshold,5,6,4.33,$\timeout$,3,2.7,17.2
+\NoisyMaxGauss,2,2,2.0,1.35,2,2.0,1.3
+\NoisyMaxGauss,3,3,3.0,3.37,3,2.5,1.8
+\NoisyMaxGauss,4,4,4.0,$\timeout$,4,3.0,40.1
+\NoisyMaxGauss,5,5,5.0,$\timeout$,5,3.5,$\timeout$

@@ -1,0 +1,12 @@
+type,input_size,eps,time,output
+\LaplaceBelowThreshold,1,0.5,1,$\checkmark$
+\LaplaceBelowThreshold,2,0.5,22,$\checkmark$
+\LaplaceBelowThreshold,3,0.5,203,$\checkmark$
+\LaplaceBelowThreshold,4,0.5,1294,$\checkmark$
+\LaplaceNoisyMax,3,0.5,151,$\checkmark$
+\LaplaceNoisyMax,3,1,163,$\checkmark$
+\LaplaceNoisyMin,3,0.5,163,$\checkmark$
+\LaplaceNoisyMin,3,1,174,$\checkmark$
+\NonPrivBelowThresholdLaplace-$4$,2,1,41,$\times$
+\NonPrivBelowThresholdLaplace-$5$,2,0.5,1,$\times$
+\NonPrivBelowThresholdLaplace-$6$,3,1,89,$\times$

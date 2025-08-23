@@ -1,0 +1,15 @@
+folder,input_size,eps,delta,test,max_depth,avg_depth,min_depth,max_variables,avg_variables,min_variables,number_of_paths,number_of_outputs,max_conditions,avg_conditions,min_conditions,time_all,output_all,time_single,output_single
+svt_max,4,0.5,0.01,example_4.dip,5,3.8,2,5,3.8,2,5,5,4,2.8,1,TIMEOUT,N/A,TIMEOUT,N/A
+svt_max,5,0.5,0.01,example_5.dip,6,4.333333333333333,2,6,4.333333333333333,2,6,6,5,3.3333333333333335,1,TIMEOUT,N/A,TIMEOUT,N/A
+svt_max,2,0.5,0.01,example_2.dip,3,2.6666666666666665,2,3,2.6666666666666665,2,3,3,2,1.6666666666666667,1,7.17923370997111,"{ ""DP"": 1}",4.249853610992432,"{ ""DP"": 1}"
+svt_max,3,0.5,0.01,example_3.dip,4,3.25,2,4,3.25,2,4,4,3,2.25,1,TIMEOUT,N/A,TIMEOUT,N/A
+svt_max,1,0.5,0.01,example_1.dip,2,2,2,2,2,2,2,2,1,1,1,1.3558425903320312,"{ ""DP"": 1}",1.5458850860595703,"{ ""DP"": 1}"
+svt_mix1_max,4,0.5,0.01,example_4.dip,5,3.8,2,5,3.8,2,5,5,4,2.8,1,TIMEOUT,N/A,TIMEOUT,N/A
+svt_mix1_max,5,0.5,0.01,example_5.dip,6,4.333333333333333,2,6,4.333333333333333,2,6,6,5,3.3333333333333335,1,TIMEOUT,N/A,TIMEOUT,N/A
+svt_mix1_max,2,0.5,0.01,example_2.dip,3,2.6666666666666665,2,3,2.6666666666666665,2,3,3,2,1.6666666666666667,1,12.540941635767618,"{ ""DP"": 1}",7.0633039474487305,"{ ""DP"": 1}"
+svt_mix1_max,3,0.5,0.01,example_3.dip,4,3.25,2,4,3.25,2,4,4,3,2.25,1,TIMEOUT,N/A,TIMEOUT,N/A
+svt_mix1_max,1,0.5,0.01,example_1.dip,2,2,2,2,2,2,2,2,1,1,1,1.4826355775197346,"{ ""DP"": 1}",1.3459149201711018,"{ ""DP"": 1}"
+noisy_max,4,0.5,0.01,example_4.dip,4,4,4,4,4,4,8,4,3,3,3,TIMEOUT,N/A,TIMEOUT,N/A
+noisy_max,5,0.5,0.01,example_5.dip,5,5,5,5,5,5,16,5,4,4,4,TIMEOUT,N/A,TIMEOUT,N/A
+noisy_max,2,0.5,0.01,example_2.dip,2,2,2,2,2,2,2,2,1,1,1,1.3602577050526936,"{ ""DP"": 1}",1.3478938738505046,"{ ""DP"": 1}"
+noisy_max,3,0.5,0.01,example_3.dip,3,3,3,3,3,3,4,3,2,2,2,9.828049977620443,"{ ""DP"": 1}",3.3675522009531655,"{ ""DP"": 1}"
