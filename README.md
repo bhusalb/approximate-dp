@@ -1,74 +1,138 @@
+# Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions
 
-# DpApprox 
+This repository contains the artifact for our CCS 2025 paper:  
+"Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions."
 
-An automated and integrated tool for proving and disproving Differential Privacy with gaussian distributions and laplace distributions.
+The tool, DpApprox, automatically verifies whether algorithms written in ourlang are:
+- Differentially private
+- Not differentially private
+- Or unresolved (inconclusive)
 
-# Install via Docker
-Due to the multiple dependencies of this project, it is much easier to install inside a docker container. 
+It is implemented in Python and C++, and leverages:
+- PLY – program parsing
+- igraph – graph-based state representation
+- FLINT – efficient integral computation
 
-In the project root directory, run:
+---
 
-```bash
-docker build . -t dpapprox
-docker run --rm -it dpapprox
-```
+## Download
 
-# Usage
-Run `python3 src/main.py -h` you will see the following help message:
+You can access the artifact in multiple ways:
 
-```
-usage: main.py [-h] --file FILE --eps EPS [--delta DELTA] [--deps DEPS] [--k K] [--input INPUT] [--debug] [--characterize] [--regular] [--output OUTPUT] [--prec PREC]
-               [--epriv EPRIV]
+- GitHub (latest development version):
+    git clone https://github.com/bhusalb/approximate-dp.git
+    cd approximate-dp
 
-Approx DP
+- Zenodo (archived release for CCS 2025): [DOI link here]
 
-options:
-  -h, --help            show this help message and exit
-  --file FILE, -f FILE
-  --eps EPS, -e EPS     The value of epsilon.
-  --delta DELTA, -d DELTA
-                        The value of delta.
-  --deps DEPS, -D DEPS  The value of D.
-  --k K, -k K           The value of thr.
-  --input INPUT, -i INPUT
-                        The file path for adjacent pairs.
-  --debug, -dd
-  --characterize, -c
-  --regular, -r
-  --output OUTPUT, -o OUTPUT
-                        Check for the particular output.
-  --prec PREC, -p PREC  The prec for the computation.
-  --epriv EPRIV, -ee EPRIV
-                        The value of the epsilon priv.
-```
+- DockerHub (pre-built image) (optional if available):
+    docker pull bhusalb/dpapprox
 
+---
 
-Run `python3 src/main.py -f [FILE] -e [eps] -d [delta]` to start analyzing `[FILE]`, the tool will generate a `temp_program` executable containing encoded probabilities for proving or disproving differential privacy.
+## Requirements
 
-### Writing Your Own Algorithm
+- Hardware:
+  - Tool: 4 GB RAM
+  - Benchmarking: 16 GB RAM
 
-Most of the syntax in DpApprox is the very simple: 
-1. Program must have INPUT_SIZE constant and OUTPUT array.
+- Software:
+  - Unix-like environment (recommended)
+  - Docker
+  - Git
+  - FLINT library
 
-2. You can define two types of variables, NUMERIC and RANDOM variables. 
+---
 
-3. You can use IF THEN statement or IF THEN ELSE statement. 
+## Installation
 
-4. You can sample from `gauss` or `lap`.
-Let's look at an example `svt` algorithm in `examples/svt/example_1.dip`.
+Build the Docker container:
+    docker build . -t dpapprox
 
-```C
-INPUTSIZE 1;
-RANDOM TH = gauss(eps/2, 0);
-OUTPUT = [0];
-    
-RANDOM Q0 = gauss(eps/4, INPUT[0]);
-IF Q0 < TH THEN {
-    OUTPUT[0] = 1;
-}
-```
+Run the container:
+    docker run --rm -it dpapprox
 
+---
 
-[//]: # (# License)
+## Basic Usage
 
-[//]: # ([MIT]&#40;./LICENSE&#41;.)
+Check options:
+    python3 src/main.py --help
+
+Example: analyze examples/svt/example_1.dip
+    python3 src/main.py -f examples/svt/example_1.dip -e 0.5
+    # Output: { "DP": 1 }
+
+---
+
+## Benchmarks
+
+Benchmarks include:
+- SVT variants (Gaussian, Laplace, mixed) → examples/svt*
+- NoisyMax/NoisyMin (Gaussian & Laplace) → examples/noisy_*
+- k-minmax & m-Range (Gaussian & Laplace) → examples/kminmax*, examples/mrange*
+
+Reproduce paper results:
+
+    # Optimized benchmarks
+    python3 scripts/benchmark.py
+
+    # Unoptimized benchmarks
+    python3 scripts/benchmark_unoptimized.py
+
+    # Generate Tables 1 & 2
+    python3 scripts/table_generator.py
+
+    # Generate Figure 3
+    python3 scripts/plot_generator.py
+
+---
+
+## Writing Programs in DiPGauss
+
+Rules:
+- Must include INPUTSIZE constant and OUTPUT array
+- Variables: NUMERIC or RANDOM
+- Control: IF THEN or IF THEN ELSE
+- Sampling: gauss(inv_sigma, mean) or lap(inv_scale, mean)
+
+Example:
+
+    INPUTSIZE 1;
+    RANDOM TH = gauss(eps/2, 0);
+    OUTPUT = [0];
+
+    RANDOM Q0 = gauss(eps/4, INPUT[0]);
+    IF Q0 < TH THEN {
+        OUTPUT[0] = 1;
+    }
+
+---
+
+[//]: # (## Citation)
+
+[//]: # ()
+[//]: # (If you use this artifact in your research, please cite our CCS 2025 paper:)
+
+[//]: # ()
+[//]: # (    @inproceedings{bhusal2025approximate,)
+
+[//]: # (      title={Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions},)
+
+[//]: # (      author={Bhusal, Bishnu and Chadha, Rohit and Sistla, A. Prasad and Viswanathan, Mahesh},)
+
+[//]: # (      booktitle={Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security},)
+
+[//]: # (      year={2025},)
+
+[//]: # (      publisher={ACM})
+
+[//]: # (    })
+
+[//]: # ()
+[//]: # (---)
+
+[//]: # (## License)
+
+[//]: # ()
+[//]: # (This project is licensed under the MIT License - see the LICENSE file for details.)
