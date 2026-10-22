@@ -132,3 +132,24 @@ Example:
 
 [//]: # ()
 [//]: # (This project is licensed under the MIT License - see the LICENSE file for details.)
+
+## Paper
+
+*Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions*, ACM CCS 2025. [DOI](https://doi.org/10.1145/3719027.3765043) · [arXiv](https://arxiv.org/abs/2509.08804) · [Paper page](https://bishnubhusal.com.np/publications/bhusal2025ccs/)
+
+## Citation
+
+If you use this code in your research, please cite:
+
+```bibtex
+@inproceedings{bhusal2025approximate,
+  title     = {Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions},
+  author    = {Bhusal, Bishnu and Chadha, Rohit and Sistla, A. Prasad and Viswanathan, Mahesh},
+  booktitle = {Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security},
+  series    = {CCS '25},
+  pages     = {1439--1453},
+  year      = {2025},
+  publisher = {Association for Computing Machinery},
+  doi       = {10.1145/3719027.3765043}
+}
+```
