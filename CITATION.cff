@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use DiPApprox, please cite the paper below."
+title: "DiPApprox: approximate verification of differential privacy with Gaussian distributions"
+type: software
+repository-code: "https://github.com/bhusalb/approximate-dp"
+authors:
+  - family-names: Bhusal
+    given-names: Bishnu
+    orcid: "https://orcid.org/0000-0001-7522-5878"
+  - family-names: Chadha
+    given-names: Rohit
+  - family-names: Sistla
+    given-names: A. Prasad
+  - family-names: Viswanathan
+    given-names: Mahesh
+preferred-citation:
+  type: conference-paper
+  title: "Approximate Algorithms for Verifying Differential Privacy with Gaussian Distributions"
+  authors:
+    - family-names: Bhusal
+      given-names: Bishnu
+    - family-names: Chadha
+      given-names: Rohit
+    - family-names: Sistla
+      given-names: A. Prasad
+    - family-names: Viswanathan
+      given-names: Mahesh
+  collection-title: "Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security (CCS '25)"
+  publisher:
+    name: "Association for Computing Machinery"
+  start: 1439
+  end: 1453
+  year: 2025
+  doi: "10.1145/3719027.3765043"
+  url: "https://arxiv.org/abs/2509.08804"
